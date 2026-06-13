@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARE-44 · KSAU-HS Clinical Affairs</title>
+<style>
+:root {
+  --navy: #0f2b5b;
+  --navy2: #1a3f82;
+  --blue: #2563eb;
+  --blue-light: #eff6ff;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --gray50: #f8fafc;
+  --gray100: #f1f5f9;
+  --gray200: #e2e8f0;
+  --gray400: #94a3b8;
+  --gray600: #475569;
+  --gray900: #0f172a;
+  --white: #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+  --radius: 10px;
+  --gold: #f59e0b;
+  --silver: #94a3b8;
+  --bronze: #b45309;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--gray100); color: var(--gray900); font-size: 13.5px; }
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--navy);
+  color: white;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 14px 24px;
+  gap: 16px;
+  position: sticky; top: 0; z-index: 90;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.topbar-left h1 { font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+.topbar-left .sub { font-size: 11px; opacity: .7; margin-top: 2px; }
+.topbar-right { display: flex; gap: 10px; align-items: center; }
+.sync-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: 20px; padding: 5px 12px; font-size: 11px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+.sync-dot.live { background: #4ade80; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.btn-sm { background: rgba(255,255,255,.15); color: white; border: 1px solid rgba(255,255,255,.25); border-radius: 7px; padding: 6px 14px; font-size: 12px; cursor: pointer; transition: background .15s; }
+.btn-sm:hover { background: rgba(255,255,255,.28); }
+.btn-green { background: var(--green); border-color: var(--green); }
+.btn-green:hover { background: #047857; }
+
+/* ── SUMMARY STRIP ── */
+.summary-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--gray200); border-bottom: 1px solid var(--gray200); }
+.sstat { background: white; padding: 12px 16px; text-align: center; }
+.sstat .val { font-size: 22px; font-weight: 800; color: var(--navy); }
+.sstat .lbl { font-size: 10px; color: var(--gray600); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.sstat.warn .val { color: var(--red); }
+.sstat.ok .val { color: var(--green); }
+.sstat.amber .val { color: var(--amber); }
+
+/* ── TOOLBAR ── */
+.toolbar { background: white; border-bottom: 1px solid var(--gray200); padding: 10px 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.toolbar input[type=text] { border: 1px solid var(--gray200); border-radius: 8px; padding: 8px 14px 8px 36px; width: 240px; font-size: 13px; outline: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2394a3b8' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; }
+.toolbar input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.toolbar select { border: 1px solid var(--gray200); border-radius: 8px; padding: 8px 10px; font-size: 12px; background: white; outline: none; }
+.toolbar label { font-size: 12px; color: var(--gray600); display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
+.toolbar label input[type=checkbox] { accent-color: var(--blue); width: 14px; height: 14px; }
+.tb-sep { width: 1px; height: 22px; background: var(--gray200); }
+.export-btn { margin-left: auto; background: var(--navy); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.export-btn:hover { background: var(--navy2); }
+
+/* ── SCORING KEY ── */
+.scoring-key { background: var(--blue-light); border: 1px solid #bfdbfe; border-radius: var(--radius); margin: 16px 20px 0; padding: 12px 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.sk-section h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--blue); margin-bottom: 6px; font-weight: 700; }
+.sk-row { display: flex; gap: 6px; font-size: 11px; color: var(--gray600); margin-bottom: 3px; }
+.sk-score { font-weight: 700; color: var(--navy); width: 14px; flex-shrink: 0; }
+
+/* ── MAIN TABLE ── */
+.main { padding: 16px 20px 40px; }
+.table-wrap { background: white; border-radius: var(--radius); border: 1px solid var(--gray200); overflow: hidden; box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--navy); color: white; }
+thead th { padding: 11px 12px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .4px; white-space: nowrap; cursor: pointer; user-select: none; }
+thead th:hover { background: var(--navy2); }
+thead th.sort-active { color: #93c5fd; }
+tbody tr { border-bottom: 1px solid var(--gray100); cursor: pointer; transition: background .1s; }
+tbody tr:hover { background: var(--blue-light) !important; }
+tbody tr:nth-child(even) { background: var(--gray50); }
+tbody tr.dup-row { border-left: 3px solid var(--amber); }
+tbody tr.needs-data { border-left: 3px solid #e879f9; }
+td { padding: 9px 12px; vertical-align: middle; }
+
+/* cells */
+.rank-cell { font-weight: 800; font-size: 15px; width: 44px; text-align: center; }
+.rank-gold { color: var(--gold); }
+.rank-silver { color: var(--silver); }
+.rank-bronze { color: var(--bronze); }
+
+.name-cell .nm { font-weight: 600; font-size: 13px; }
+.name-cell .em { font-size: 11px; color: var(--gray400); }
+.flag { display: inline-block; font-size: 10px; background: var(--amber-light); color: var(--amber); border-radius: 10px; padding: 1px 7px; margin-left: 5px; font-weight: 600; }
+.flag.pink { background: #fdf4ff; color: #a21caf; }
+
+.status-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 600; }
+.sp-pub { background: var(--green-light); color: #065f46; }
+.sp-oral { background: var(--blue-light); color: #1e3a8a; }
+.sp-poster { background: #f3e8ff; color: #6b21a8; }
+.sp-ongoing { background: var(--amber-light); color: #92400e; }
+.sp-none { background: var(--gray100); color: var(--gray600); }
+
+/* score columns */
+.pts-cell { text-align: center; }
+.pts-num { font-size: 15px; font-weight: 800; }
+.pts-max { font-size: 10px; color: var(--gray400); }
+.pts-gpa { color: #1d4ed8; }
+.pts-exp { color: #7c3aed; }
+.pts-res { color: #0e7490; }
+.pts-comm { color: #065f46; }
+.pts-conf { color: #9a3412; }
+.pts-total { color: var(--navy); }
+
+/* inline edit */
+.editable-cell { position: relative; }
+.pts-input { width: 62px; border: 1.5px solid var(--blue); border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: 700; text-align: center; outline: none; background: var(--blue-light); color: var(--navy); transition: all .15s; }
+.pts-input:focus { box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+.pts-input.unsaved { border-color: var(--amber); background: var(--amber-light); }
+.pts-input.saved { border-color: var(--green); background: var(--green-light); animation: saveFlash .8s ease; }
+@keyframes saveFlash { 0%{background:#bbf7d0} 100%{background:var(--green-light)} }
+.pts-empty { width: 62px; height: 28px; border: 1.5px dashed var(--gray400); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gray400); font-size: 11px; transition: all .15s; }
+.pts-empty:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+.total-cell { text-align: center; }
+.total-score { font-size: 20px; font-weight: 800; color: var(--navy); }
+.total-pend { font-size: 12px; color: var(--gray400); font-style: italic; }
+.progress-mini { height: 4px; background: var(--gray200); border-radius: 4px; margin-top: 4px; overflow: hidden; }
+.progress-fill { height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--green)); }
+
+.doc-btn { background: var(--green); color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; transition: background .15s; }
+.doc-btn:hover { background: #047857; }
+.doc-btn.missing { background: var(--red); }
+.doc-btn.missing:hover { background: #b91c1c; }
+
+.empty-state { text-align: center; padding: 60px; color: var(--gray400); }
+
+/* pagination */
+.pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-top: 1px solid var(--gray200); }
+.pg-info { font-size: 12px; color: var(--gray600); }
+.pg-btns { display: flex; gap: 4px; }
+.pg-btn { border: 1px solid var(--gray200); background: white; border-radius: 6px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+.pg-btn:hover { background: var(--gray100); }
+.pg-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+.pg-btn:disabled { opacity: .4; cursor: default; }
+
+/* ── MODAL ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.overlay.open { display: flex; }
+.modal { background: white; border-radius: 14px; width: 740px; max-width: 95vw; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-head { background: var(--navy); color: white; padding: 18px 22px; border-radius: 14px 14px 0 0; display: flex; justify-content: space-between; align-items: flex-start; }
+.modal-head h2 { font-size: 16px; font-weight: 700; }
+.modal-head .msub { font-size: 11px; opacity: .7; margin-top: 3px; }
+.modal-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.modal-body { padding: 22px; }
+.msection { margin-bottom: 20px; }
+.msection h3 { font-size: 11px; color: var(--gray600); text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--gray200); padding-bottom: 6px; margin-bottom: 12px; }
+.score-boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.sbox { border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid var(--gray200); }
+.sbox .sv { font-size: 22px; font-weight: 800; }
+.sbox .so { font-size: 10px; color: var(--gray400); }
+.sbox .sl { font-size: 10px; color: var(--gray600); margin-top: 3px; }
+.sbox.gpa-box { background: #eff6ff; border-color: #bfdbfe; } .sbox.gpa-box .sv { color: #1d4ed8; }
+.sbox.exp-box { background: #f5f3ff; border-color: #ddd6fe; } .sbox.exp-box .sv { color: #7c3aed; }
+.sbox.res-box { background: #ecfeff; border-color: #a5f3fc; } .sbox.res-box .sv { color: #0e7490; }
+.sbox.comm-box { background: var(--green-light); border-color: #6ee7b7; } .sbox.comm-box .sv { color: #065f46; }
+.sbox.conf-box { background: #fff7ed; border-color: #fed7aa; } .sbox.conf-box .sv { color: #9a3412; }
+.sbox.total-box { background: var(--navy); border-color: var(--navy); } .sbox.total-box .sv, .sbox.total-box .so, .sbox.total-box .sl { color: white; }
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mfield label { display: block; font-size: 11px; color: var(--gray400); margin-bottom: 2px; }
+.mfield span { font-size: 13px; font-weight: 500; }
+.doc-links { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+.dlink { display: flex; align-items: center; gap: 8px; padding: 7px 11px; background: var(--gray50); border: 1px solid var(--gray200); border-radius: 7px; text-decoration: none; color: var(--blue); font-size: 12px; }
+.dlink:hover { background: var(--blue-light); border-color: #bfdbfe; }
+.dlink .dn { background: var(--navy); color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.no-doc { color: var(--red); font-size: 12px; font-style: italic; }
+.dup-alert { background: var(--amber-light); border: 1px solid #fcd34d; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e; margin-bottom: 14px; }
+
+/* inline edit in modal */
+.modal-edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.med-field { display: flex; flex-direction: column; gap: 4px; }
+.med-field label { font-size: 11px; color: var(--gray600); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.med-input { border: 1.5px solid var(--gray200); border-radius: 8px; padding: 9px 12px; font-size: 14px; font-weight: 700; outline: none; transition: all .15s; }
+.med-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.med-input.changed { border-color: var(--amber); background: var(--amber-light); }
+.med-hint { font-size: 11px; color: var(--gray400); }
+.save-row-btn { background: var(--green); color: white; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 6px; transition: background .15s; }
+.save-row-btn:hover { background: #047857; }
+.save-row-btn.saving { background: var(--amber); }
+.save-row-btn.saved { background: var(--green); }
+
+/* toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white; border-radius: 10px; padding: 12px 20px; font-size: 13px; z-index: 200; transform: translateY(80px); opacity: 0; transition: all .3s; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { background: var(--red); }
+
+@media (max-width: 900px) {
+  .summary-strip { grid-template-columns: repeat(3,1fr); }
+  .score-boxes { grid-template-columns: repeat(3,1fr); }
+  .modal-edit-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>📊 CARE-44 Composite Score Dashboard</h1>
+    <div class="sub">KSAU-HS · College of Pharmacy · Clinical Affairs Vice-Deanship · AY 2026–2027 · Class of 2027</div>
+  </div>
+  <div class="topbar-right">
+    <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Connecting…</span></div>
+    <button class="btn-sm" onclick="exportCSV()">⬇ Export</button>
+    <button class="btn-sm btn-green" onclick="window.print()">🖨 Print</button>
+  </div>
+</div>
+
+<div class="summary-strip" id="summaryStrip"></div>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Search name, ID, PI, title…" oninput="doFilter()">
+  <select id="fRes" onchange="doFilter()">
+    <option value="">All Research</option>
+    <option value="Published">Published</option>
+    <option value="Oral">Oral Presentation</option>
+    <option value="Poster">Poster Presentation</option>
+    <option value="Ongoing">Ongoing</option>
+    <option value="none">No Research</option>
+  </select>
+  <select id="fConf" onchange="doFilter()">
+    <option value="">All Conference Levels</option>
+    <option value="Leadership">Leadership</option>
+    <option value="Committee">Committee</option>
+    <option value="Attendee">Attendee</option>
+  </select>
+  <div class="tb-sep"></div>
+  <label><input type="checkbox" id="fDup" onchange="doFilter()"> Multi-submission</label>
+  <label><input type="checkbox" id="fNeeds" onchange="doFilter()"> Missing GPA/Exp</label>
+  <label><input type="checkbox" id="fDoc" onchange="doFilter()"> Missing docs</label>
+  <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+</div>
+
+<div class="main">
+  <div class="scoring-key" id="scoringKey">
+    <div class="sk-section">
+      <h4>Research (4 pts)</h4>
+      <div class="sk-row"><span class="sk-score">4</span> Published / accepted manuscript</div>
+      <div class="sk-row"><span class="sk-score">2</span> Poster or oral presentation</div>
+      <div class="sk-row"><span class="sk-score">1</span> PharmD project completion</div>
+      <div class="sk-row"><span class="sk-score">0</span> No research activity</div>
+    </div>
+    <div class="sk-section">
+      <h4>Community Service (4 pts)</h4>
+      <div class="sk-row"><span class="sk-score">4</span> Organizer / Project Leader</div>
+      <div class="sk-row"><span class="sk-score">3</span> Active Participant ≥3</div>
+      <div class="sk-row"><span class="sk-score">2</span> Active Participant 1–2</div>
+      <div class="sk-row"><span class="sk-score">1</span> General Volunteer</div>
+    </div>
+    <div class="sk-section">
+      <h4>Conference Participation (4 pts)</h4>
+      <div class="sk-row"><span class="sk-score">4</span> Leadership Role (Chair/Lead)</div>
+      <div class="sk-row"><span class="sk-score">3</span> Organizing Committee Member</div>
+      <div class="sk-row"><span class="sk-score">2</span> Attendee ≥2 conferences</div>
+      <div class="sk-row"><span class="sk-score">1</span> Attendee 1 conference</div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sort('rank')" id="th-rank">#</th>
+            <th onclick="sort('name')" id="th-name">Student</th>
+            <th onclick="sort('num')">Student #</th>
+            <th onclick="sort('r_status')">Research Status</th>
+            <th class="pts-cell" onclick="sort('gpa_pts')" title="44 pts — enter manually">GPA<br><span style="font-weight:400;font-size:10px">/44 pts</span></th>
+            <th class="pts-cell" onclick="sort('exp_pts')" title="44 pts (incl. 4% Progress Test)">Exp.<br><span style="font-weight:400;font-size:10px">/44 pts</span></th>
+            <th class="pts-cell" onclick="sort('rs')" title="Research Contributions">Research<br><span style="font-weight:400;font-size:10px">/4 pts</span></th>
+            <th class="pts-cell" onclick="sort('cms')" title="Community Service">Community<br><span style="font-weight:400;font-size:10px">/4 pts</span></th>
+            <th class="pts-cell" onclick="sort('cs')" title="Conference Participation">Conference<br><span style="font-weight:400;font-size:10px">/4 pts</span></th>
+            <th class="total-cell" onclick="sort('total_100')">Total<br><span style="font-weight:400;font-size:10px">/100</span></th>
+            <th>Docs</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none"><p>No students match filters</p></div>
+      <div class="pagination" id="pgBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <div><h2 id="mName">—</h2><div class="msub" id="mSub">—</div></div>
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase compat (no imports needed, works as plain script) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// ── Firebase config — replace with real values to enable live sync ──
+let db = null;
+try {
+  const FB = firebase.initializeApp({
+    apiKey: "AIzaSyCTSGsUFp76FBHLFIt0Q100A7ks3waXyHI",
+    authDomain: "care44-appe.firebaseapp.com",
+    databaseURL: "https://care44-appe-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "care44-appe",
+    storageBucket: "care44-appe.firebasestorage.app",
+    messagingSenderId: "188550548668",
+    appId: "1:188550548668:web:a4a7d79a5adf1addb254b9"
+  });
+  db = FB.database();
+} catch(e) { db = null; }
+
+// ── Compat wrappers ──
+
+// ── Base student data from form (extracurricular pre-scored) ──
+const BASE = [{"id":"1009","name":"Ruya Shnar Alshkrh","num":"431210121","mrn":"3254324","email":"alshkrh10121@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Biological Characterization of Several Medicinal Plants – Anticancer & Antimicrobial Activity","pi":"Dr. Shurouq Alowais","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published_Ruya%20Alshkrh.png","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%20Conference_Ruya%20Alshkrh.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Ruya%20Alshkrh.png","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2047","name":"Saad Abdullah Alhamdan","num":"431110138","mrn":"3213309","email":"alhamdan10138@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Comparative Analysis of Sepsis Outcomes Across BMI Groups: Retrospective Cohort","pi":"Dr. Abdulmajeed M. Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published_Saad%20Alhamdan.pdf","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ikaph%20Leader_Saad%20Alhamdan.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%A7%D9%84%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9%D9%8A%D8%A9_Saad%20Alhamdan.pdf","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1017","name":"Monerah Suliman Aljalajel","num":"421210280","mrn":"3109635","email":"421210280@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Characteristics, Management, and Outcomes of DOAC-Associated Major Bleeding","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2852_Monerah%20Aljalajel.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conference%20-%20APPE%20Requirments_Monerah%20Aljalajel.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service%20-%20APPE%20Requirments_Monerah%20Aljalajel.pdf","rs":4,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2029","name":"Razan Suliman Alnajdi","num":"431210084","mrn":"3251370","email":"alnajdi10084@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Retrospective Case Series","pi":"Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/research%20docs_Razan%20Alnajdi.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences%20certificates_Razan%20Alnajdi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"40","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/leadership%20certificates_Razan%20Alnajdi.pdf","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2040","name":"Turki Rashed Almuaythir","num":"0508193950","mrn":"3442321","email":"almuaythir10064@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Complications and Outcomes of SARS-CoV-2 on Cirrhosis Patients","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Acceptance%20letter_Turki%20Almuaythir.PNG","conf_lvl":"Conference Leadership Role","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IKAPH%201_Turki%20Almuaythir.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/KING%20SAUD%20BIN%20ABDULAZIZ%20UNIVERSITY%20FOR%20HEALTH_Turki%20Almuaythir.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1015","name":"Fahad Abdullah Alqhtani","num":"43-1-1-1-0339","mrn":"3212355","email":"alqhtani10339@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Two research projects in publication phase","pi":"Dr. Maha Aldoughaim / Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Oral%20presentation%20at%20iKAPH_Fahad%20Alqhtani.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6+","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Host%20at%20ICCT%203rd%20confernce%20(1)_Fahad%20Alqhtani.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"10+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%A7%D9%84%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D9%88%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9%D8%A7%D8%AA_Fahad%20Alqhtani.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1011","name":"Joud Abdullah AbuSallam","num":"431210046","mrn":"3220829","email":"asiri10046@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Manuscript done, waiting for publication","pi":"Abdulmajeed Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_9854_Joud%20Asiri.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Joud%20AbuSallam%20Conferences_Joud%20Asiri.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Joud%20AbuSallam%20Community%20Services_Joud%20Asiri.pdf","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2051","name":"Yazeed Abdullah Bin Thnayan","num":"431110481","mrn":"3314898","email":"binthnayan10481@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Quality Improvement","r_title":"QI project — oral presentation at HPC","pi":"Mohammad Shawaqfah","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2750_Yazeed%20BinThnayan.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2747_Yazeed%20BinThnayan.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"10","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2751_Yazeed%20BinThnayan.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2039","name":"Abdulrahman Dhafer Alqarni","num":"411110166","mrn":"495461","email":"ALQARNI166@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Antimicrobial Outcomes in Sickle Cell Disease — VOC/ACS","pi":"Dr. Maha AlDoughaim","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/iKAPH%20Acceptance_ABDULRAHMAN%20ALQARNI.png","conf_lvl":"Conference Leadership Role","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/iKAPH%20Mock%20Interview%20Team%20Leader_ABDULRAHMAN%20ALQARNI.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Save%20Them%20With%20a%20Cell%20Campain_ABDULRAHMAN%20ALQARNI.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2046","name":"Raghad Zaid Alsabr","num":"0558252351","mrn":"3251207","email":"alsabr10093@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Fondaparinux vs Argatroban for Heparin-Induced Thrombocytopenia","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/fmed-13-1794887_Raghad%20Alsabr.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Media%20certificate_Raghad%20Alsabr.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/PHOTO-2026-05-23-22-50-06_Raghad%20Alsabr.jpg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2024","name":"Nourah Nasser Ali Alqhtani","num":"431210332","mrn":"3250608","email":"alqhtani10332@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Retrospective Case Series","pi":"Dr. Lama Alfehiad","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Screenshot%202026-05-22%20at%2021.43.31_Nourah%20Alqhtani.png","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Screenshot%202026-05-22%20at%2022.09.22_Nourah%20Alqhtani.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Nourah_Certificates_Nourah%20Alqhtani.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2018","name":"Sarah Mubarak Alnasser","num":"431210165","mrn":"3263183","email":"alnasser10165@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_3926_Sarah%20Alnasser.png","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_0400_Sarah%20Alnasser.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_4741_Sarah%20Alnasser.jpeg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1020","name":"Wateen Sameer Almalki","num":"431210351","mrn":"3251270","email":"almalki10351@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Ketamine-Based Sedation in Severe Burn and Inhalational Lung Injury ICU","pi":"Faisal Al Mutairi","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_1207_Wateen%20Almalki.jpeg","conf_lvl":"Committee Member","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1208_Wateen%20Almalki.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">10","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Pharmacy%20day%202.pdf_Wateen%20Almalki%201.png","rs":4,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"1010","name":"Reem Moath Alali","num":"431210129","mrn":"3251329","email":"alali10129@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_7427_Reem%20Alali.png","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Certificate_Reem%20Alali.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/VolunteerEvents_777452_Reem%20Alali.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1008","name":"Amani Mohammed Alsubaie","num":"431210030","mrn":"611096","email":"alsubaie10030@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Published article at MDPI","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published%20article_Amani%20Alsubaie.pdf","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%20organizer_Amani%20Alsubaie.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%203_Amani%20Alsubaie.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2025","name":"Ghadah Nasser Almutairi","num":"431210231","mrn":"3251352","email":"almutairi10231@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4212_Ghadah%20Almutairi.jpeg","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_9512_Ghadah%20Almutairi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_0307_Ghadah%20Almutairi.jpeg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2026","name":"Linah Sultan Alotaibi","num":"431210364","mrn":"3250712","email":"alotaibi10364@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"DAPAGLIFLOZIN on Ventricular Arrhythmia in HF Patients with ICD","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Linah%20Alotaibi_Linah%20Alotaibi.png","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1597_Linah%20Alotaibi.jpg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">7","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/photo_5800668154810797745_y_Linah%20Alotaibi.jpg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2022","name":"Shahad Rashed Almugren","num":"431210193","mrn":"3250637","email":"almugren10193@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Two posters: manuscript completed + second project","pi":"Dr. Nada Alsuhebany / Dr. Mohammed Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B6AB9F77D-CFCD-42E4-A954-E961FEA0B3C0%7D&file=Poster%202_Shahad%20Almugren.docx","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BFF1CEF41-5090-4798-9A1B-9F09096E99EA%7D&file=Conference_Shahad%20Almugren.docx","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"13","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B8638811D-0C7A-4140-9F4E-48509881780A%7D&file=Community%20service_Shahad%20Almugren.docx","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2036","name":"Shumukh Majed Alsubaie","num":"431210188","mrn":"662511","email":"alsubaie10188@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Pembrolizumab vs Durvalumab — Efficacy & Safety Assessment","pi":"Dr. Wesam Abdel Razaq","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/ihop_student_poster_Shumukh%20Alsubaie.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ihop_Shumukh%20Alsubaie.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Leader%20at%20Pharmacy%20club_Shumukh%20Alsubaie.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2052","name":"Saleh Mansoor Albarrak","num":"431110180","mrn":"N/A","email":"albarrak10180@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Antidotal Therapies in ED Toxicology — Efficacy, Safety, Optimization","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_5709_Saleh%20Albarrak.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/66DB3D18-CD74-462A-AA52-4913184D80EE_Saleh%20Albarrak.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_5661_Saleh%20Albarrak.jpeg","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2027","name":"Sarah Abdullah Almandil","num":"431210162","mrn":"1147655","email":"almandil10162@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Research manuscript completed, presented as poster","pi":"Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BFB74D1AA-1246-4710-B7F8-E7FA1757E504%7D&file=Researche_Sarah%20Almandil.docx","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BB4CA1D76-BA3A-4239-BFB0-34F1DD159D68%7D&file=Conferences_Sarah%20Almandil.docx","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B6A089A06-B20D-4540-8295-8A404ED7E67E%7D&file=Community%20service_Sarah%20Almandil.docx","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2035","name":"Abdulmajeed Ali Ghazwani","num":"431-1-1-10285","mrn":"N/A","email":"ghazwani10285@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Presented at conference — manuscript with PI","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2053_Abdulmajeed%20Ghazwani.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2199_Abdulmajeed%20Ghazwani.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2164_Abdulmajeed%20Ghazwani.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2042","name":"Raghad Mohammed Alanazi","num":"431210099","mrn":"667142","email":"alanazi10099@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"SGLT2 Inhibitors on Ventricular Arrhythmias and ICD in Heart Failure","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4873_Raghad%20Alanazi.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"7","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_4757_Raghad%20Alanazi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20service_Raghad%20Alanazi.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2023","name":"Abdulaziz Alrajhi","num":"431110222","mrn":"2696983","email":"alrajhi10222@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Clinical Impact of Acute Rejection — waiting for publication","pi":"Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B9BCCFD7D-F2E3-4988-BEED-6209F4B27FEA%7D&file=Clinical_Impact_of_Acute_Rejection_on_1_Year__Abdulaziz%20Alrajhi.docx","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_6764_Abdulaziz%20Alrajhi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community_Abdulaziz%20Alrajhi.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2","name":"Abeer Fahad Albakran","num":"431210220","mrn":"664736","email":"albakran10220@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Efficacy of Gut-Altering Medications on Immune Checkpoint Therapy in NSCLC","pi":"Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IHOP7%20Poster_Abeer%20Albakran.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ihop_Attendee_Abeer%20Albakran.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"7","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/7x%20community%20services_Abeer%20Albakran.pdf","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2028","name":"Faisal Khalid Alzuraiqi","num":"43-1-1-1-0350","mrn":"681326","email":"alzuraiqi10350@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"Flavoring Agent Selection for Taste Masking of Azithromycin","pi":"Prof. Aiman A. Obaidat","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Paper%20%20prof.Aiman_Faisal%20Alzuraiqi.pdf","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2254_Faisal%20Alzuraiqi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2270_Faisal%20Alzuraiqi.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2054","name":"Nawaf Mohammed Albogami","num":"431110458","mrn":"3430028","email":"albogami10458@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Safety & Efficacy of Acetazolamide in Acute Heart Failure","pi":"Dr. Lama Al Fehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG-20260524-WA0004_Nawaf%20Albogami.jpg","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Organizing%20Team%20-%20Certificates_Nawaf%20Albogami.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Volunteer_107753_Nawaf%20Albogami.pdf","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2030","name":"Fatimah Abdullah Balatif","num":"411210227","mrn":"2994675","email":"BALATIF227@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Fixed-Dose Hydrocortisone in Septic Shock — Clinical Outcomes by Body Weight","pi":"Dr. Abdulmajeed Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/PHOTO-2026-05-20-16-26-45_FATIMA%20BALATIF.jpeg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/participation-certificate-1128181169_FATIMA%20BALATIF.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D9%85%D9%84%D9%81%20%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9_FATIMA%20BALATIF.pdf","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2056","name":"Abdullah Abdulaziz Alturki","num":"36-111-0232","mrn":"395647","email":"Alturki232@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Cross-sectional study — complete, oral presentation","pi":"Dr. Lama Al Fehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/COP-RU-55-2025%20-%20ADDING%20CO-INVESTIGATOR%20TO%20TH_Abdullah%20Alturki%201.pdf","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/photo_1_Abdullah%20Alturki%201.jpg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/photo_2026-05-24_22-00-07_Abdullah%20Alturki.jpg","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"1007","name":"Weam Abualghaith","num":"431210354","mrn":"3250640","email":"abualghaith10354@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Fondaparinux vs Argatroban for Heparin-Induced Thrombocytopenia — Published","pi":"Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Weam%20Abualghaith%20Published%20Research_Weam%20Abualghaith.pdf","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Weam_Abualghaith_SSCP25_Attendance_Weam%20Abualghaith%201.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Weam_Abualghaith_Community_Services_Weam%20Abualghaith%201.pdf","rs":4,"cs":2,"cms":4,"dup":true,"subs":2},{"id":"2021","name":"Shahad Abdulaziz Bin Surayyi","num":"431210200","mrn":"6667782","email":"binsurayyi10200@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Data collection and manuscript complete, presented as poster","pi":"Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Posters_Shahad%20BinSurayyi.pdf","conf_lvl":"Committee Member","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences_Shahad%20BinSurayyi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Shahad%20BinSurayyi.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2057","name":"Abdulmajeed Saleh Alshamrani","num":"421110270","mrn":"3255225","email":"421110270@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Trastuzumab Deruxtecan & Sacituzumab Govitecan in Breast Cancer — Single-Center Cohort","pi":"Dr. Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/HPC%202025%20Poster%20Abdulmajeed%20Alshamtani%20(1)_ABDULMAJEED%20SALEH%20S.pdf","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%209%20%D8%B4%D9%87%D8%A7%D8%AF%D8%A9_ABDULMAJEED%20SALEH%20S.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D9%85%D8%AC%D9%8A%D8%AF%20%D8%A7%D9%84%D8%B4%D9%85%D8%B1%D8%A7%D9%86%D9%8A_ABDULMAJEED%20SALEH%20S.pdf","rs":1,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2048","name":"Raneem Alessa","num":"431210105","mrn":"3256731","email":"alessa10105@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Research complete, presented as poster","pi":"Dr. Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2722_Raneem%20Alessa.jpeg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/OTC_Raneem%20Alessa.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"several","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Leader_Raneem%20Alessa.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2034","name":"Lama Sari Alsuwailem","num":"431210262","mrn":"3250981","email":"alsuwailem10262@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Systematic Review / Meta-analysis","r_title":"Systematic review/meta-analysis — peer reviewed","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_3656_Lama%20Alsuwailem%201.png","conf_lvl":"Committee Member","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/volCertificate_Lama%20Alsuwailem.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">30","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_8020_Lama%20Alsuwailem.jpeg","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2031","name":"Rahaf Alkhalifah","num":"431210376","mrn":"3215453","email":"alkhalifah10376@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Tolerability and Treatment Interruption with Trastuzumab Deruxtecan in HER2+ Breast Cancer","pi":"Dr. Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/ihop_student_poster_Rahaf%20Alkhalifah.pdf","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ICCT-Scientific%20Team_Rahaf%20Alkhalifah.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"17","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Campaign-Pharmacy%20Club%202_Rahaf%20Alkhalifah.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2045","name":"Rahaf Jubran Wadaeani","num":"913848","mrn":"3251959","email":"wadaeani10111@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"SGLT2 Inhibitors in Advanced CKD and ESKD — Real-World Cohort","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2692_Rahaf%20Wadaeani.jpeg","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2697_Rahaf%20Wadaeani.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2701_Rahaf%20Wadaeani.jpeg","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2043","name":"Khaled Ibrahim Alkhreiigi","num":"421110081","mrn":"8252274","email":"421110081@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Manuscript ready to publish","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_1315_KHALED%20IBRAHIM%20S%20ALK.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_6866_KHALED%20IBRAHIM%20S%20ALK.jpeg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"11","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Khaled%20alkhreiigi_KHALED%20IBRAHIM%20S%20ALK.pdf","rs":2,"cs":4,"cms":3,"dup":false,"subs":1},{"id":"2041","name":"Alhanouf Alhaqbani","num":"421210015","mrn":"3251517","email":"421210015@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Ongoing","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4971_ALHANOUF%20FARIS%20F%20ALH.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_4972_ALHANOUF%20FARIS%20F%20ALH.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/badges_collection_ALHANOUF%20FARIS%20F%20ALH.pdf","rs":1,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1024","name":"Remaz Khaled Alturiki","num":"431210137","mrn":"3251476","email":"alturiki10137@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Manuscript completed — poster presentation","pi":"Dr. Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8990_Remaz%20Alturiki.jpeg","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/SIPHA_Remaz%20Alturiki.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/OTC%20Community_Remaz%20Alturiki.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1021","name":"Rayyan Munif Alshammari","num":"381110151","mrn":"2840414","email":"alshammari151@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Preparations for publication","pi":"Dr. Mohammad Shwaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8686_Rayyan%20Alshammari.jpeg","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_8688_Rayyan%20Alshammari.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_8691_Rayyan%20Alshammari.jpeg","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2055","name":"Dalal Fahad Alosaimi","num":"431210073","mrn":"N/A","email":"alotaibi10073@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Fixed Hydrocortisone in Septic Shock — Safety & Efficacy","pi":"Dr. Abdulmajeed Al-shehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_7399_Dalal%20Alotaibi.png","conf_lvl":"Attendee (≥2 conferences)","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_7397_Dalal%20Alotaibi.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_7391_Dalal%20Alotaibi.jpeg","rs":2,"cs":2,"cms":4,"dup":false,"subs":1},{"id":"1014","name":"Joud Mohammed Alotaibi","num":"431210048","mrn":"623712","email":"alotaibi10048@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Clinical Characteristics in Patients with Invasive Aspergillosis","pi":"Dr. Khalid Bin Saleh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IRBApprovalMemoForRegularProposals%203_Joud%20AlOtaibi.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences_Joud%20AlOtaibi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20services_Joud%20AlOtaibi.pdf","rs":1,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2020","name":"Amani Abdullah Alrubayan","num":"431210040","mrn":"3251401","email":"alrubayan10040@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Nephropathy Risk in Organ Transplant Patients on Tacrolimus","pi":"Aiman Obaidat","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Kimarc_Amani%20Alrubayan%201.jpg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/SSCP%2025_Amani%20Alrubayan%201.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20pharmacy%201_Amani%20Alrubayan.pdf","rs":1,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2053","name":"Waleed Abdulrhman Almutairi","num":"431110470","mrn":"N/A","email":"almutairi10470@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Antidotal Therapies in ED Toxicology — Assessment","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2656_Waleed%20Almutairi%201.jpeg","conf_lvl":"Committee Member","conf_n":"7","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1709_Waleed%20Almutairi.jpeg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Waleed%20Almutairi.pdf","rs":2,"cs":3,"cms":3,"dup":true,"subs":2},{"id":"1003","name":"Mada Zaid Hazazi","num":"431210295","mrn":"3250639","email":"hazazi10295@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"In Silico SAR Study of Kainoids Binding to GluK1 Kainate Receptors","pi":"Dr. Reem Alkhodier","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2816_Mada%20Hazazi.png","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4+","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conference_Mada%20Hazazi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Services_Mada%20Hazazi.pdf","rs":2,"cs":2,"cms":4,"dup":false,"subs":1},{"id":"2033","name":"Sara Mohammad Alsarhan","num":"431210166","mrn":"2426813","email":"alsarhan10166@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Systematic Review / Meta-analysis","r_title":"Systematic Review — Oral presentation","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Sara_Mohammad_Alsarhan%20(1)_Sara%20Alsarhan.pdf","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_9788_Sara%20Alsarhan.pdf","comm_lvl":"Active Participant (≥3 activities)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/final_all_documents_Sara%20Alsarhan.pdf","rs":2,"cs":2,"cms":3,"dup":false,"subs":1},{"id":"1022","name":"Abdullah Abdulrahman Alasmari","num":"43-1-1-1-0261","mrn":"3247598","email":"alasmari10261@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Experimental","r_title":"RP-HPLC Development and Validation — Preparing for publication","pi":"Prof. Mahmoud Mansour","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Development%20and%20Validation%20of%20an%20RP-HPLC_Abdullah%20Alasmari.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/photo_5798742519108538617_y_Abdullah%20Alasmari.jpg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20service%20participations_Abdullah%20Alasmari.pdf","rs":1,"cs":3,"cms":3,"dup":false,"subs":1},{"id":"2044","name":"Abdullah Aldakkan","num":"43-1-1-1-0507","mrn":"3209663","email":"aldakkan10507@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Safety and Efficiency of Acetazolamide in Acute Heart Failure","pi":"Dr. Lama Alfeihid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8255_Abdullah%20Aldakkan.jpeg","conf_lvl":"Attendee (≥2 conferences)","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_8472_Abdullah%20Aldakkan.jpeg","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_1316_Abdullah%20Aldakkan.jpeg","rs":2,"cs":2,"cms":1,"dup":false,"subs":1},{"id":"2037","name":"Mohammad Ahmed Alghamdi","num":"421110363","mrn":"3430029","email":"421110363@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Systematic Review / Meta-analysis","r_title":"Statistical analysis complete, manuscript underway","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Supporting%20picture%20for%20Oral%20Presentation_MOHAMMAD%20AHMED%20M%20ALG.jpeg","conf_lvl":"Attendee (≥2 conferences)","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Supporting%20picture%20for%20Oral%20Presentation_MOHAMMAD%20AHMED%20M%20ALG.jpeg","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Volunteer_MOHAMMAD%20AHMED%20M%20ALG.jpeg","rs":2,"cs":2,"cms":1,"dup":false,"subs":1},{"id":"1019","name":"Abdulmalik Alanazi","num":"43-1-1-1-0289","mrn":"N/A","email":"alanazi10289@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"Sitagliptin Manuscript — aiming to publish","pi":"Prof. Mahmoud Mansour","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BD87C2EBE-1855-4F21-9F57-6CFC588A0B18%7D&file=Sitagliptin%20Manuscript_Abdulmalik%20Alanazi.docx","conf_lvl":"Attendee (1 conference)","conf_n":"1","conf_doc":"","comm_lvl":"","comm_n":"0","comm_doc":"","rs":2,"cs":1,"cms":0,"dup":false,"subs":1},{"id":"2050","name":"Mohammed Sattam Alanazi","num":"421110374","mrn":"542594","email":"421110374@ksau-hs.edu.sa","r_status":"","r_type":"","r_title":"","pi":"","r_doc":"","conf_lvl":"","conf_n":"0","conf_doc":"","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/image_MOHAMMED%20SATTAM%20M%20AL.jpg","rs":0,"cs":0,"cms":1,"dup":true,"subs":2}];
+
+// ── State ──
+let STATE = {}; // {id: {gpa_pts, exp_pts, notes}} from Firebase
+let sortField = 'extra'; let sortAsc = false;
+let filtered = []; let page = 1; const PER = 20;
+let openStudentId = null;
+
+function calcTotal(s) {
+  const gpa = STATE[s.id]?.gpa_pts;
+  const exp = STATE[s.id]?.exp_pts;
+  if (gpa == null || exp == null) return null;
+  return parseFloat(gpa) + parseFloat(exp) + s.rs + s.cms + s.cs;
+}
+
+function extraPts(s) { return s.rs + s.cms + s.cs; }
+function hasMissingDoc(s) { return (!s.r_doc&&s.r_status) || (!s.conf_doc&&s.conf_lvl) || (!s.comm_doc&&s.comm_lvl); }
+
+// ── Render immediately with local data (never wait for Firebase) ──
+renderAll();
+
+// ── Try to load localStorage saved data first ──
+try {
+  const saved = localStorage.getItem('care44_state');
+  if (saved) {
+    STATE = JSON.parse(saved);
+    renderAll();
+  }
+} catch(e) {}
+
+// ── Firebase: connect & listen (optional, syncs on top) ──
+let fbConnected = false;
+if (db) {
+  try {
+    const fbRoot = db.ref('care44/ay2027');
+    fbRoot.on('value', snap => {
+      const fbData = snap.val() || {};
+      STATE = { ...STATE, ...fbData };
+      try { localStorage.setItem('care44_state', JSON.stringify(STATE)); } catch(e) {}
+      fbConnected = true;
+      document.getElementById('syncDot').classList.add('live');
+      document.getElementById('syncLabel').textContent = 'Live sync ✓';
+      renderAll();
+    }, err => {
+      console.warn('Firebase read error:', err);
+      document.getElementById('syncDot').style.background = '#f87171';
+      document.getElementById('syncLabel').textContent = '⚠ DB rules error — check Firebase console';
+    });
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    document.getElementById('syncLabel').textContent = '⚠ Firebase error';
+  }
+  // Timeout: if no response in 6s, show offline
+  setTimeout(() => {
+    if (!fbConnected) {
+      document.getElementById('syncDot').style.background = '#f87171';
+      document.getElementById('syncLabel').textContent = '⚠ Offline — edits saved locally';
+    }
+  }, 6000);
+} else {
+  document.getElementById('syncLabel').textContent = '⚠ Offline — edits saved locally';
+}
+
+function renderAll() { renderSummary(); doFilter(); }
+
+function renderSummary() {
+  const total = BASE.length;
+  const done = BASE.filter(s => STATE[s.id]?.gpa_pts != null && STATE[s.id]?.exp_pts != null).length;
+  const dups = BASE.filter(s => s.dup).length;
+  const avgExtra = Math.round(BASE.reduce((a,b)=>a+extraPts(b),0)/total);
+  const completedTotals = BASE.map(s=>calcTotal(s)).filter(v=>v!=null);
+  const avgTotal = completedTotals.length ? Math.round(completedTotals.reduce((a,b)=>a+b,0)/completedTotals.length) : '—';
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="sstat"><div class="val">${total}</div><div class="lbl">Students</div></div>
+    <div class="sstat ok"><div class="val">${done}/${total}</div><div class="lbl">GPA+Exp Entered</div></div>
+    <div class="sstat amber"><div class="val">${total-done}</div><div class="lbl">Pending Entry</div></div>
+    <div class="sstat warn"><div class="val">${dups}</div><div class="lbl">Multi-Submit ⚠️</div></div>
+    <div class="sstat"><div class="val">${avgExtra}/12</div><div class="lbl">Avg Extracurricular</div></div>
+    <div class="sstat ok"><div class="val">${avgTotal}</div><div class="lbl">Avg Total (entered)</div></div>
+  `;
+}
+
+function doFilter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const fR = document.getElementById('fRes').value;
+  const fC = document.getElementById('fConf').value;
+  const fDup = document.getElementById('fDup').checked;
+  const fNeeds = document.getElementById('fNeeds').checked;
+  const fDoc = document.getElementById('fDoc').checked;
+  filtered = BASE.filter(s => {
+    const txt = (s.name+s.num+s.email+s.r_title+s.pi+s.mrn).toLowerCase();
+    if (q && !txt.includes(q)) return false;
+    if (fR === 'none' && s.r_status) return false;
+    if (fR && fR !== 'none' && !s.r_status.includes(fR)) return false;
+    if (fC && !s.conf_lvl.includes(fC)) return false;
+    if (fDup && !s.dup) return false;
+    if (fNeeds && STATE[s.id]?.gpa_pts != null && STATE[s.id]?.exp_pts != null) return false;
+    if (fDoc && !hasMissingDoc(s)) return false;
+    return true;
+  });
+  filtered.sort((a,b) => {
+    let va, vb;
+    if (sortField === 'total_100') { va = calcTotal(a) ?? -1; vb = calcTotal(b) ?? -1; }
+    else if (sortField === 'gpa_pts') { va = STATE[a.id]?.gpa_pts ?? -1; vb = STATE[b.id]?.gpa_pts ?? -1; }
+    else if (sortField === 'exp_pts') { va = STATE[a.id]?.exp_pts ?? -1; vb = STATE[b.id]?.exp_pts ?? -1; }
+    else if (sortField === 'extra') { va = extraPts(a); vb = extraPts(b); }
+    else { va = a[sortField] ?? ''; vb = b[sortField] ?? ''; }
+    if (typeof va === 'string') va = va.toLowerCase(), vb = vb.toLowerCase();
+    return sortAsc ? (va>vb?1:va<vb?-1:0) : (va<vb?1:va>vb?-1:0);
+  });
+  page = 1; renderTable();
+};
+
+window.sort = function(f) {
+  if (sortField===f) sortAsc=!sortAsc; else {sortField=f;sortAsc=false;}
+  doFilter();
+};
+
+function statusPill(s) {
+  if (!s) return '<span class="status-pill sp-none">None</span>';
+  if (s.includes('Published')) return `<span class="status-pill sp-pub">Published</span>`;
+  if (s.includes('Oral')) return `<span class="status-pill sp-oral">Oral</span>`;
+  if (s.includes('Poster')) return `<span class="status-pill sp-poster">Poster</span>`;
+  if (s.includes('Ongoing')) return `<span class="status-pill sp-ongoing">Ongoing</span>`;
+  return `<span class="status-pill sp-none">${s}</span>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('emptyState');
+  const sl = filtered.slice((page-1)*PER, page*PER);
+  if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; renderPg(); return; }
+  empty.style.display='none';
+  tbody.innerHTML = sl.map((s, i) => {
+    const globalRank = (page-1)*PER + i + 1;
+    const gpa = STATE[s.id]?.gpa_pts;
+    const exp = STATE[s.id]?.exp_pts;
+    const total = calcTotal(s);
+    const rankIcon = globalRank===1?'🥇':globalRank===2?'🥈':globalRank===3?'🥉':globalRank;
+    const rankClass = globalRank===1?'rank-gold':globalRank===2?'rank-silver':globalRank===3?'rank-bronze':'';
+    const rowClass = s.dup ? 'dup-row' : (gpa==null||exp==null)?'needs-data':'';
+    const docOk = !hasMissingDoc(s);
+    const extra = extraPts(s);
+    const pct = total ? (total/100*100) : 0;
+    return `<tr class="${rowClass}" onclick="openModal('${s.id}')">
+      <td class="rank-cell ${rankClass}">${rankIcon}</td>
+      <td class="name-cell">
+        <div class="nm">${s.name}${s.dup?'<span class="flag">⚠️ Multi</span>':''}</div>
+        <div class="em">${s.email}</div>
+      </td>
+      <td>${s.num}</td>
+      <td>${statusPill(s.r_status)}</td>
+      <td class="pts-cell pts-gpa" onclick="event.stopPropagation()">
+        ${renderInlineInput(s.id,'gpa',gpa,44)}
+      </td>
+      <td class="pts-cell pts-exp" onclick="event.stopPropagation()">
+        ${renderInlineInput(s.id,'exp',exp,44)}
+      </td>
+      <td class="pts-cell pts-res"><span class="pts-num">${s.rs}</span><span class="pts-max">/4</span></td>
+      <td class="pts-cell pts-comm"><span class="pts-num">${s.cms}</span><span class="pts-max">/4</span></td>
+      <td class="pts-cell pts-conf"><span class="pts-num">${s.cs}</span><span class="pts-max">/4</span></td>
+      <td class="total-cell" onclick="event.stopPropagation()">
+        ${total!=null
+          ? `<div class="total-score">${total.toFixed(1)}</div><div class="progress-mini"><div class="progress-fill" style="width:${pct}%"></div></div>`
+          : `<div class="total-pend">–– / 100</div><div style="font-size:10px;color:var(--amber);margin-top:2px">Enter GPA & Exp.</div>`
+        }
+      </td>
+      <td onclick="event.stopPropagation()">
+        <button class="doc-btn ${docOk?'':'missing'}" onclick="openModal('${s.id}')">${docOk?'✓ Docs':'⚠ Check'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+  renderPg();
+}
+
+function renderInlineInput(sid, field, val, max) {
+  const inputId = `inp-${sid}-${field}`;
+  if (val != null) {
+    return `<input id="${inputId}" type="number" min="0" max="${max}" step="0.1" class="pts-input" value="${parseFloat(val).toFixed(1)}" onchange="saveField('${sid}','${field}',this)" oninput="this.classList.add('unsaved')" title="${field==='gpa'?'GPA Points (0–44)':'Experiential Course Points (0–44)'}">`;
+  }
+  return `<div class="pts-empty" onclick="focusInput('${sid}','${field}')" title="Click to enter ${field==='gpa'?'GPA':' Experiential'} points">+ Enter</div>`;
+}
+
+window.focusInput = function(sid, field) {
+  // Temporarily replace the empty div with an input
+  const el = document.querySelector(`.pts-empty[onclick*="${sid}"][onclick*="${field}"]`);
+  if (!el) return;
+  const max = 44;
+  const inp = document.createElement('input');
+  inp.type='number'; inp.min=0; inp.max=max; inp.step=0.1;
+  inp.className='pts-input unsaved'; inp.placeholder='0.0';
+  inp.title=`Enter ${field==='gpa'?'GPA':'Experiential'} points (0–${max})`;
+  inp.onchange = () => saveField(sid, field, inp);
+  inp.oninput = () => inp.classList.add('unsaved');
+  el.replaceWith(inp); inp.focus();
+};
+
+window.saveField = async function(sid, field, inputEl) {
+  const v = parseFloat(inputEl.value);
+  if (isNaN(v) || v < 0 || v > 44) { showToast('⚠ Value must be between 0 and 44', true); return; }
+  // Always save locally first (instant, no wait)
+  if (!STATE[sid]) STATE[sid] = {};
+  STATE[sid][`${field}_pts`] = v;
+  try { localStorage.setItem('care44_state', JSON.stringify(STATE)); } catch(e) {}
+  inputEl.classList.remove('unsaved');
+  inputEl.classList.add('saved');
+  setTimeout(()=>inputEl.classList.remove('saved'), 2000);
+  renderSummary();
+  renderTable();
+  showToast(`✓ ${field === 'gpa' ? 'GPA' : 'Experiential'} saved for ${BASE.find(s=>s.id===sid)?.name}`);
+  // Then try Firebase in background
+  try {
+    if (db) { try { await db.ref(`care44/ay2027/${sid}`).update({ [`${field}_pts`]: v }); } catch(e) {} }
+  } catch(e) {
+    // Firebase unavailable — already saved locally, no action needed
+  }
+};
+
+function renderPg() {
+  const total = filtered.length;
+  const pages = Math.ceil(total/PER);
+  const s = (page-1)*PER+1; const e = Math.min(page*PER,total);
+  let html = `<div class="pg-info">Showing ${s}–${e} of ${total} students</div><div class="pg-btns">`;
+  html += `<button class="pg-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>← Prev</button>`;
+  for (let i=1;i<=pages;i++) html+=`<button class="pg-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  html += `<button class="pg-btn" onclick="goPage(${page+1})" ${page===pages||pages===0?'disabled':''}>Next →</button></div>`;
+  document.getElementById('pgBar').innerHTML = html;
+}
+
+window.goPage = function(p) {
+  const pages = Math.ceil(filtered.length/PER);
+  if(p<1||p>pages) return; page=p; renderTable();
+};
+
+// ── Modal ──
+window.openModal = function(sid) {
+  const s = BASE.find(b=>b.id===sid); if(!s) return;
+  openStudentId = sid;
+  document.getElementById('mName').textContent = s.name;
+  document.getElementById('mSub').textContent = `Student # ${s.num} · MRN ${s.mrn} · ${s.email}`;
+  const gpa = STATE[sid]?.gpa_pts;
+  const exp = STATE[sid]?.exp_pts;
+  const total = calcTotal(s);
+  const rdocs = s.r_doc ? s.r_doc.split(';').map(u=>u.trim()).filter(Boolean) : [];
+  const cdocs = s.conf_doc ? s.conf_doc.split(';').map(u=>u.trim()).filter(Boolean) : [];
+  const cmdocs = s.comm_doc ? s.comm_doc.split(';').map(u=>u.trim()).filter(Boolean) : [];
+  function dlinks(docs, cat) {
+    if (!docs.length) return `<p class="no-doc">⚠️ No ${cat} document uploaded</p>`;
+    return `<div class="doc-links">${docs.map((d,i)=>`<a class="dlink" href="${d}" target="_blank"><span class="dn">${i+1}</span>${decodeURIComponent(d.split('/').pop().split('_')[0]).substring(0,55)}</a>`).join('')}</div>`;
+  }
+  document.getElementById('mBody').innerHTML = `
+    ${s.dup ? `<div class="dup-alert">⚠️ This student submitted multiple times. Showing the best-scoring submission. Please verify all submissions in Microsoft Forms.</div>` : ''}
+    <div class="msection">
+      <h3>Score Breakdown — CARE-44 (out of 100)</h3>
+      <div class="score-boxes">
+        <div class="sbox gpa-box"><div class="sv">${gpa!=null?parseFloat(gpa).toFixed(1):'—'}</div><div class="so">/44 pts</div><div class="sl">GPA (44%)</div></div>
+        <div class="sbox exp-box"><div class="sv">${exp!=null?parseFloat(exp).toFixed(1):'—'}</div><div class="so">/44 pts</div><div class="sl">Experiential (44%)</div></div>
+        <div class="sbox res-box"><div class="sv">${s.rs}</div><div class="so">/4 pts</div><div class="sl">Research (4%)</div></div>
+        <div class="sbox comm-box"><div class="sv">${s.cms}</div><div class="so">/4 pts</div><div class="sl">Community (4%)</div></div>
+        <div class="sbox conf-box"><div class="sv">${s.cs}</div><div class="so">/4 pts</div><div class="sl">Conference (4%)</div></div>
+      </div>
+      <div class="sbox total-box" style="margin-top:10px;display:inline-block;padding:14px 30px">
+        <div class="sv">${total!=null?total.toFixed(1):'Pending'}</div>
+        <div class="so">${total!=null?'/100':''}</div>
+        <div class="sl">Composite Score</div>
+      </div>
+    </div>
+    <div class="msection">
+      <h3>Enter / Edit GPA & Experiential Points</h3>
+      <div class="modal-edit-row">
+        <div class="med-field">
+          <label>GPA Points (0–44)</label>
+          <input type="number" id="m-gpa" class="med-input" min="0" max="44" step="0.1" value="${gpa!=null?parseFloat(gpa).toFixed(1):''}" placeholder="e.g. 38.5" oninput="this.classList.add('changed')">
+          <span class="med-hint">44% of total — derived from cumulative GPA + Progress Test (4%)</span>
+        </div>
+        <div class="med-field">
+          <label>Experiential Course Points (0–44)</label>
+          <input type="number" id="m-exp" class="med-input" min="0" max="44" step="0.1" value="${exp!=null?parseFloat(exp).toFixed(1):''}" placeholder="e.g. 41.0" oninput="this.classList.add('changed')">
+          <span class="med-hint">44% of total — from IPPE + APPE experiential course grades</span>
+        </div>
+      </div>
+      <button class="save-row-btn" onclick="saveFromModal('${sid}')">💾 Save & Recalculate</button>
+    </div>
+    <div class="msection">
+      <h3>Research Project</h3>
+      <div class="mgrid">
+        <div class="mfield"><label>Status</label><span>${statusPill(s.r_status)}</span></div>
+        <div class="mfield"><label>Type</label><span>${s.r_type||'—'}</span></div>
+        <div class="mfield"><label>PI</label><span>${s.pi||'—'}</span></div>
+        <div class="mfield"><label>Score</label><span><b>${s.rs}/4</b></span></div>
+      </div>
+      <div class="mfield" style="margin-top:8px"><label>Research Title</label><span>${s.r_title||'Not provided'}</span></div>
+      ${dlinks(rdocs,'research')}
+    </div>
+    <div class="msection">
+      <h3>Conference Participation (${s.cs}/4 pts)</h3>
+      <div class="mgrid">
+        <div class="mfield"><label>Highest Level</label><span>${s.conf_lvl||'None'}</span></div>
+        <div class="mfield"><label># Participated</label><span>${s.conf_n||'—'}</span></div>
+      </div>
+      ${dlinks(cdocs,'conference')}
+    </div>
+    <div class="msection">
+      <h3>Community Service (${s.cms}/4 pts)</h3>
+      <div class="mgrid">
+        <div class="mfield"><label>Highest Role</label><span>${s.comm_lvl||'None'}</span></div>
+        <div class="mfield"><label># Activities</label><span>${s.comm_n||'—'}</span></div>
+      </div>
+      ${dlinks(cmdocs,'community service')}
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+};
+
+window.saveFromModal = async function(sid) {
+  const btn = document.querySelector('.save-row-btn');
+  const gpaVal = parseFloat(document.getElementById('m-gpa').value);
+  const expVal = parseFloat(document.getElementById('m-exp').value);
+  if (isNaN(gpaVal)||gpaVal<0||gpaVal>44) { showToast('⚠ GPA must be 0–44', true); return; }
+  if (isNaN(expVal)||expVal<0||expVal>44) { showToast('⚠ Experiential must be 0–44', true); return; }
+  // Save locally immediately
+  if(!STATE[sid]) STATE[sid]={};
+  STATE[sid].gpa_pts = gpaVal; STATE[sid].exp_pts = expVal;
+  try { localStorage.setItem('care44_state', JSON.stringify(STATE)); } catch(e) {}
+  btn.textContent = '✓ Saved!'; btn.classList.add('saved');
+  setTimeout(()=>{btn.textContent='💾 Save & Recalculate';btn.classList.remove('saved');},2500);
+  renderAll();
+  openModal(sid);
+  showToast(`✓ Score saved for ${BASE.find(s=>s.id===sid)?.name}`);
+  // Try Firebase in background
+  try {
+    if (db) { try { await db.ref(`care44/ay2027/${sid}`).update({ gpa_pts: gpaVal, exp_pts: expVal }); } catch(e) {} }
+  } catch(e) {
+    // Saved locally already, silent
+  }
+};
+
+window.closeModal = function(e) { if(e.target===document.getElementById('overlay')) closeModalBtn(); };
+window.closeModalBtn = function() { document.getElementById('overlay').classList.remove('open'); openStudentId=null; };
+
+// ── Export ──
+window.exportCSV = function() {
+  const cols = ['Name','Student Number','MRN','Email','Research Status','Research Score (/4)','Community Score (/4)','Conference Score (/4)','Extracurricular (/12)','GPA Points (/44)','Experiential Points (/44)','Total Score (/100)','Multi-Submit','Notes'];
+  const rows = BASE.map(s => {
+    const g = STATE[s.id]?.gpa_pts ?? '';
+    const e = STATE[s.id]?.exp_pts ?? '';
+    const t = calcTotal(s);
+    return [s.name, s.num, s.mrn, s.email, s.r_status, s.rs, s.cms, s.cs, extraPts(s), g, e, t!=null?t.toFixed(1):'', s.dup?'Yes':'No', STATE[s.id]?.notes||'']
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [cols.join(','), ...rows].join('\n');
+  const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='CARE44_Composite_Scores_AY2027.csv'; a.click();
+};
+
+// ── Toast ──
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (isError?' error':'');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+</script>
+</body>
+</html>
