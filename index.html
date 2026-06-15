@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSAU-HS · Experiential Education Platform</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--navy:#0f2b5b;--navy2:#1a3f82;--blue:#2563eb;--blue-light:#eff6ff;--green:#059669;--green-light:#d1fae5;--amber:#d97706;--amber-light:#fef3c7;--red:#dc2626;--red-light:#fee2e2;--purple:#7c3aed;--purple-light:#f5f3ff;--gray50:#f8fafc;--gray100:#f1f5f9;--gray200:#e2e8f0;--gray300:#cbd5e1;--gray400:#94a3b8;--gray600:#475569;--gray900:#0f172a;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.1);--shadow-lg:0 10px 25px rgba(0,0,0,.12);--radius:10px;--gold:#f59e0b;--silver:#94a3b8;--bronze:#b45309}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray100);color:var(--gray900);font-size:13.5px}
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-card{background:white;border-radius:16px;padding:40px;width:380px;box-shadow:var(--shadow-lg)}
+.login-card h1{font-size:20px;font-weight:800;color:var(--navy);text-align:center;margin-bottom:4px}
+.login-card p{font-size:12px;color:var(--gray600);text-align:center;margin-bottom:24px}
+.lf{margin-bottom:14px}.lf label{display:block;font-size:11px;font-weight:700;color:var(--gray600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.lf input{width:100%;border:1.5px solid var(--gray200);border-radius:8px;padding:10px 14px;font-size:14px;outline:none;transition:border .15s}
+.lf input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.login-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px}
+.login-btn:hover{background:var(--navy2)}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:8px;display:none}
+.login-note{font-size:10px;color:var(--gray400);text-align:center;margin-top:14px;line-height:1.6}
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.on{display:flex}
+/* TOPBAR */
+.topbar{background:var(--navy);color:white;display:flex;align-items:center;padding:0 20px;height:52px;position:sticky;top:0;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.3);gap:14px;flex-shrink:0}
+.tb-brand{font-size:14px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+.tb-brand span{font-size:10px;opacity:.6;display:block;font-weight:400;margin-top:1px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sync-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border-radius:20px;padding:4px 11px;font-size:11px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--amber)}
+.sync-dot.live{background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tb-btn{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer}
+.tb-btn:hover{background:rgba(255,255,255,.28)}
+.role-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:11px}
+/* NAV */
+.nav{background:white;border-bottom:2px solid var(--gray200);display:flex;overflow-x:auto;padding:0 16px;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:5px;padding:11px 14px;font-size:12px;font-weight:600;color:var(--gray600);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s}
+.nav-item:hover{color:var(--navy)}
+.nav-item.active{color:var(--blue);border-bottom-color:var(--blue)}
+/* PAGES */
+.page{display:none;padding:18px 20px 40px}
+.page.active{display:block}
+/* CARDS */
+.card{background:white;border-radius:var(--radius);border:1px solid var(--gray200);box-shadow:var(--shadow)}
+.ch{padding:12px 16px;border-bottom:1px solid var(--gray200);display:flex;align-items:center;justify-content:space-between}
+.ch h3{font-size:13px;font-weight:700;color:var(--navy)}
+.cb{padding:16px}
+/* STAT STRIP */
+.ss{display:grid;gap:1px;background:var(--gray200);border-radius:var(--radius);overflow:hidden;border:1px solid var(--gray200)}
+.sc{background:white;padding:12px 14px;text-align:center}
+.sc .v{font-size:22px;font-weight:800;color:var(--navy)}
+.sc .l{font-size:10px;color:var(--gray600);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.sc.ok .v{color:var(--green)}.sc.warn .v{color:var(--red)}.sc.amber .v{color:var(--amber)}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.btn-p{background:var(--navy);color:white}.btn-p:hover{background:var(--navy2)}
+.btn-g{background:var(--green);color:white}.btn-g:hover{background:#047857}
+.btn-a{background:var(--amber);color:white}.btn-a:hover{background:#b45309}
+.btn-r{background:var(--red);color:white}.btn-r:hover{background:#b91c1c}
+.btn-o{background:white;color:var(--gray600);border-color:var(--gray200)}.btn-o:hover{background:var(--gray50)}
+.btn-sm{padding:4px 10px;font-size:11px}
+/* TOOLBAR */
+.toolbar{background:white;border:1px solid var(--gray200);border-radius:var(--radius);padding:10px 14px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input,.toolbar select{border:1px solid var(--gray200);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;background:white}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.tsep{width:1px;height:20px;background:var(--gray200);flex-shrink:0}
+/* TABLE */
+.tw{overflow:auto;border-radius:var(--radius);border:1px solid var(--gray200)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead{background:var(--navy);color:white}
+thead th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.4px;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:var(--navy2)}
+tbody tr{border-bottom:1px solid var(--gray100);transition:background .1s}
+tbody tr:hover{background:var(--blue-light)!important}
+tbody tr:nth-child(even){background:var(--gray50)}
+td{padding:8px 12px;vertical-align:middle}
+/* PILLS */
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600}
+.p-pub{background:var(--green-light);color:#065f46}.p-oral{background:var(--blue-light);color:#1e3a8a}
+.p-poster{background:var(--purple-light);color:#4c1d95}.p-ong{background:var(--amber-light);color:#92400e}
+.p-none{background:var(--gray100);color:var(--gray600)}.p-appr{background:var(--green-light);color:#065f46}
+.p-sugg{background:var(--gray100);color:var(--gray600)}.p-mod{background:var(--amber-light);color:#92400e}
+.p-un{background:var(--red-light);color:#991b1b}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.mo.open{display:flex}
+.md{background:white;border-radius:14px;width:700px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.mh{background:var(--navy);color:white;padding:15px 20px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+.mh h2{font-size:15px;font-weight:700}.mc{background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1}
+.mb{padding:20px}
+.ms{margin-bottom:18px}.ms h3{font-size:10px;color:var(--gray600);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--gray200);padding-bottom:6px;margin-bottom:10px}
+/* INLINE EDIT */
+.pts-input{width:62px;border:1.5px solid var(--blue);border-radius:6px;padding:4px 6px;font-size:13px;font-weight:700;text-align:center;outline:none;background:var(--blue-light);color:var(--navy)}
+.pts-input.unsaved{border-color:var(--amber);background:var(--amber-light)}
+.pts-input.saved{border-color:var(--green);background:var(--green-light)}
+.pts-empty{width:62px;height:28px;border:1.5px dashed var(--gray400);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray400);font-size:11px}
+.pts-empty:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+/* SCORE BOXES */
+.sboxes{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+.sbox{border-radius:10px;padding:10px 6px;text-align:center;border:1px solid var(--gray200)}
+.sbox .sv{font-size:20px;font-weight:800}.sbox .so{font-size:10px;color:var(--gray400)}.sbox .sl{font-size:10px;color:var(--gray600);margin-top:2px}
+.sb-gpa{background:var(--blue-light);border-color:#bfdbfe}.sb-gpa .sv{color:#1d4ed8}
+.sb-exp{background:var(--purple-light);border-color:#ddd6fe}.sb-exp .sv{color:#7c3aed}
+.sb-res{background:#ecfeff;border-color:#a5f3fc}.sb-res .sv{color:#0e7490}
+.sb-cm{background:var(--green-light);border-color:#6ee7b7}.sb-cm .sv{color:#065f46}
+.sb-cf{background:#fff7ed;border-color:#fed7aa}.sb-cf .sv{color:#9a3412}
+.sb-tot{background:var(--navy);border-color:var(--navy)}.sb-tot .sv,.sb-tot .so,.sb-tot .sl{color:white}
+/* RANK */
+.rk{font-weight:800;font-size:15px;text-align:center;width:38px}
+.rk-g{color:var(--gold)}.rk-s{color:var(--silver)}.rk-b{color:var(--bronze)}
+.flag{display:inline-block;font-size:10px;background:var(--amber-light);color:var(--amber);border-radius:10px;padding:1px 6px;margin-left:4px;font-weight:600}
+/* DOC LINKS */
+.dl{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.dlink{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--gray50);border:1px solid var(--gray200);border-radius:7px;text-decoration:none;color:var(--blue);font-size:11px}
+.dlink:hover{background:var(--blue-light)}.dlink .dn{background:var(--navy);color:white;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.no-doc{color:var(--red);font-size:11px;font-style:italic}
+/* PROGRESS */
+.pb{height:5px;background:var(--gray200);border-radius:4px;overflow:hidden;margin-top:3px}
+.pf{height:5px;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--green))}
+/* FORMS */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff label{font-size:10px;font-weight:700;color:var(--gray600);text-transform:uppercase;letter-spacing:.4px}
+.ff input,.ff select,.ff textarea{border:1.5px solid var(--gray200);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;transition:border .15s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+/* CHARTS */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cb2{background:white;border-radius:var(--radius);border:1px solid var(--gray200);padding:14px}
+.cb2 h4{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.cb2 canvas{max-height:210px}
+/* HEATMAP */
+.hm{display:grid;grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:7px}
+.hc{border-radius:8px;padding:8px;text-align:center;font-size:10px;font-weight:600}
+.hc0{background:#d1fae5;color:#065f46}.hc1{background:#fef3c7;color:#92400e}.hc2{background:#fee2e2;color:#991b1b}
+.hc .hv{font-size:16px;font-weight:800;display:block;margin-bottom:2px}
+/* AUDIT */
+.ae{border-left:3px solid var(--blue);padding:7px 12px;margin-bottom:7px;background:white;border-radius:0 7px 7px 0;font-size:11px}
+.ae .at{font-size:10px;color:var(--gray400);margin-bottom:2px}.ae .am{font-weight:600}.ae .ad{color:var(--gray600);margin-top:2px}
+/* ALERT */
+.alert{border-radius:8px;padding:9px 13px;font-size:12px;margin-bottom:10px}
+.al-w{background:var(--amber-light);border:1px solid #fcd34d;color:#92400e}
+.al-i{background:var(--blue-light);border:1px solid #bfdbfe;color:#1e40af}
+.al-d{background:var(--red-light);border:1px solid #fca5a5;color:#991b1b}
+.al-ok{background:var(--green-light);border:1px solid #6ee7b7;color:#065f46}
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:white;border-radius:10px;padding:11px 18px;font-size:13px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}.toast.err{background:var(--red)}
+/* MODAL EDIT */
+.me-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.me-f{display:flex;flex-direction:column;gap:4px}
+.me-f label{font-size:10px;font-weight:700;color:var(--gray600);text-transform:uppercase;letter-spacing:.4px}
+.me-f input{border:1.5px solid var(--gray200);border-radius:8px;padding:8px 11px;font-size:14px;font-weight:700;outline:none;transition:all .15s}
+.me-f input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.me-hint{font-size:10px;color:var(--gray400)}
+.save-btn{background:var(--green);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.save-btn.saved{background:var(--green)}
+/* GS PANEL */
+.gsp{background:var(--blue-light);border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.gsp h4{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.gs-row{display:flex;gap:8px;align-items:center}
+.gs-row input{flex:1;border:1px solid var(--gray200);border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
+/* PRINT */
+@media print{#loginScreen,.topbar,.nav,.toolbar,.toast,button,.btn,select{display:none!important}.page{display:block!important;padding:0}.mo{display:none!important}table{font-size:10px}}
+@media(max-width:900px){.cg{grid-template-columns:1fr}.fg,.me-row{grid-template-columns:1fr}.sboxes{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div style="text-align:center;font-size:44px;margin-bottom:8px">🏛️</div>
+    <h1>KSAU-HS Clinical Affairs</h1>
+    <p>Experiential Education Platform · AY 2026–2027</p>
+    <div class="lf"><label>Username</label><input type="text" id="lu" placeholder="Enter username" autocomplete="username"></div>
+    <div class="lf"><label>Password</label><input type="password" id="lp" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-err" id="lerr">Invalid username or password</div>
+    <div class="login-note">⚠️ Client-side authentication is not secure for production use<br>and should be replaced by server-side authentication.<br><br>Default: <b>admin / admin123</b> &nbsp;|&nbsp; <b>viewer / view123</b></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-brand">📊 Experiential Education Platform<span>KSAU-HS · College of Pharmacy · Clinical Affairs</span></div>
+    <div class="tb-right">
+      <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Connecting…</span></div>
+      <span class="role-pill" id="rolePill"></span>
+      <button class="tb-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">🏠 Dashboard</div>
+    <div class="nav-item" onclick="showPage('care44')" id="nav-care44">📊 CARE-44 Ranking</div>
+    <div class="nav-item" onclick="showPage('allocation')" id="nav-allocation">🔀 Rotation Allocation</div>
+    <div class="nav-item" onclick="showPage('preceptors')" id="nav-preceptors">👨‍⚕️ Preceptors</div>
+    <div class="nav-item" onclick="showPage('blocks')" id="nav-blocks">📅 Rotation Blocks</div>
+    <div class="nav-item" onclick="showPage('analytics')" id="nav-analytics">📈 Analytics</div>
+    <div class="nav-item" onclick="showPage('reports')" id="nav-reports">🖨 Reports</div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">⚙️ Settings</div>
+  </div>
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><h2 style="font-size:17px;font-weight:800;color:var(--navy)">Platform Dashboard</h2><p style="font-size:11px;color:var(--gray600);margin-top:2px">AY 2026–2027 · Class of 2027</p></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-g" onclick="showPage('care44')">🎯 CARE-44 Ranking</button><button class="btn btn-p" onclick="generateAllocation()">⚡ Generate Allocation</button></div>
+    </div>
+    <div class="ss" style="grid-template-columns:repeat(8,1fr);margin-bottom:16px" id="dashStats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card"><div class="ch"><h3>📊 CARE-44 Score Progress</h3></div><div class="cb" id="dashScore"></div></div>
+      <div class="card"><div class="ch"><h3>🔀 Allocation Status</h3></div><div class="cb" id="dashAlloc"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+      <div class="card"><div class="ch"><h3>📋 Recent Audit Activity</h3></div><div class="cb" id="dashAudit"></div></div>
+      <div class="card"><div class="ch"><h3>⚡ Quick Actions</h3></div>
+        <div class="cb" style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn btn-p" style="justify-content:center" onclick="showPage('care44')">📊 Enter GPA / Experiential</button>
+          <button class="btn btn-g" style="justify-content:center" onclick="generateAllocation()">⚡ Generate Allocation</button>
+          <button class="btn btn-a" style="justify-content:center" onclick="approveAll()">✅ Approve All</button>
+          <button class="btn btn-o" style="justify-content:center" onclick="showPage('analytics')">📈 View Analytics</button>
+          <button class="btn btn-o" style="justify-content:center" onclick="showPage('reports')">🖨 Print Reports</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: CARE-44 (LOCKED) -->
+  <div class="page" id="page-care44">
+    <div class="ss" style="grid-template-columns:repeat(6,1fr);margin-bottom:0;border-radius:var(--radius) var(--radius) 0 0" id="summaryStrip"></div>
+    <div style="background:white;border-bottom:1px solid var(--gray200);padding:9px 16px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="search" placeholder="🔍 Search name, ID, PI, title…" oninput="doFilter()" style="width:220px;border:1px solid var(--gray200);border-radius:8px;padding:7px 10px;font-size:12px;outline:none">
+      <select id="fRes" onchange="doFilter()" style="border:1px solid var(--gray200);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;background:white">
+        <option value="">All Research</option><option value="Published">Published</option><option value="Oral">Oral</option><option value="Poster">Poster</option><option value="Ongoing">Ongoing</option><option value="none">No Research</option>
+      </select>
+      <select id="fConf" onchange="doFilter()" style="border:1px solid var(--gray200);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;background:white">
+        <option value="">All Conference Levels</option><option value="Leadership">Leadership</option><option value="Committee">Committee</option><option value="Attendee">Attendee</option>
+      </select>
+      <label style="font-size:12px;color:var(--gray600);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fDup" onchange="doFilter()" style="accent-color:var(--blue)"> Multi-submit</label>
+      <label style="font-size:12px;color:var(--gray600);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fNeeds" onchange="doFilter()" style="accent-color:var(--blue)"> Missing GPA/Exp</label>
+      <label style="font-size:12px;color:var(--gray600);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fDoc" onchange="doFilter()" style="accent-color:var(--blue)"> Missing docs</label>
+      <button class="btn btn-p btn-sm" style="margin-left:auto" onclick="exportC44CSV()">⬇ Export CSV</button>
+    </div>
+    <div style="background:var(--blue-light);border:1px solid #bfdbfe;padding:10px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);font-weight:700;margin-bottom:5px">Research (4 pts)</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">4</b> Published / accepted manuscript</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">2</b> Poster or oral presentation</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">1</b> PharmD project completion</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">0</b> No research activity</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);font-weight:700;margin-bottom:5px">Community Service (4 pts)</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">4</b> Organizer / Project Leader</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">3</b> Active Participant ≥3</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">2</b> Active Participant 1–2</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">1</b> General Volunteer</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);font-weight:700;margin-bottom:5px">Conference Participation (4 pts)</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">4</b> Leadership Role (Chair/Lead)</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">3</b> Organizing Committee Member</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">2</b> Attendee ≥2 conferences</div>
+        <div style="font-size:11px;color:var(--gray600)"><b style="color:var(--navy);display:inline-block;width:12px">1</b> Attendee 1 conference</div></div>
+    </div>
+    <div class="tw" style="border-radius:0 0 var(--radius) var(--radius)">
+      <table>
+        <thead><tr>
+          <th onclick="c44Sort('rank')"># ↕</th><th onclick="c44Sort('name')">Student</th>
+          <th onclick="c44Sort('num')">Student #</th><th onclick="c44Sort('r_status')">Research Status</th>
+          <th style="text-align:center" onclick="c44Sort('gpa_pts')">GPA<br><span style="font-weight:400;font-size:10px">/44</span></th>
+          <th style="text-align:center" onclick="c44Sort('exp_pts')">Exp.<br><span style="font-weight:400;font-size:10px">/44</span></th>
+          <th style="text-align:center" onclick="c44Sort('rs')">Research<br><span style="font-weight:400;font-size:10px">/4</span></th>
+          <th style="text-align:center" onclick="c44Sort('cms')">Community<br><span style="font-weight:400;font-size:10px">/4</span></th>
+          <th style="text-align:center" onclick="c44Sort('cs')">Conference<br><span style="font-weight:400;font-size:10px">/4</span></th>
+          <th style="text-align:center" onclick="c44Sort('total_100')">Total<br><span style="font-weight:400;font-size:10px">/100</span></th>
+          <th>Docs</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="emptyState" style="display:none;text-align:center;padding:50px;color:var(--gray400)">No students match filters</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:white;border-top:1px solid var(--gray200)" id="pgBar"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: ALLOCATION -->
+  <div class="page" id="page-allocation">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><h2 style="font-size:17px;font-weight:800;color:var(--navy)">🔀 Rotation Allocation</h2><p style="font-size:11px;color:var(--gray600)">Priority-based · CARE-44 composite rank → GPA → Experiential</p></div>
+      <div style="display:flex;gap:7px" id="adminAllocBtns">
+        <button class="btn btn-p btn-sm" onclick="generateAllocation()">⚡ Generate</button>
+        <button class="btn btn-g btn-sm" onclick="approveAll()">✅ Approve All</button>
+        <button class="btn btn-o btn-sm" onclick="undoLast()">↩ Undo</button>
+        <button class="btn btn-o btn-sm" onclick="exportAllocCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="ss" style="grid-template-columns:repeat(6,1fr);margin-bottom:12px" id="allocStats"></div>
+    <div class="toolbar">
+      <input type="text" id="aSearch" placeholder="🔍 Search student, specialty, site…" oninput="renderAlloc()" style="width:210px">
+      <select id="aQ" onchange="renderAlloc()"><option value="">All Quarters</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>
+      <select id="aSpec" onchange="renderAlloc()"><option value="">All Specialties</option></select>
+      <select id="aSt" onchange="renderAlloc()"><option value="">All Statuses</option><option>Approved</option><option>Suggested</option><option>Modified</option><option>Unassigned</option></select>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Rank</th><th>Student</th><th>Quarter</th><th>Rot #</th><th>Dates</th><th>Specialty</th><th>Preceptor</th><th>Site</th><th>Pref</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="allocBody"></tbody>
+      </table>
+      <div id="allocEmpty" style="display:none;text-align:center;padding:50px;color:var(--gray400)">
+        <p style="font-size:14px;margin-bottom:10px">No allocation generated yet</p>
+        <button class="btn btn-p" onclick="generateAllocation()">⚡ Generate Allocation Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: PRECEPTORS -->
+  <div class="page" id="page-preceptors">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><h2 style="font-size:17px;font-weight:800;color:var(--navy)">👨‍⚕️ Preceptor Management</h2><p style="font-size:11px;color:var(--gray600)">Capacity, utilization, and availability</p></div>
+      <button class="btn btn-p" id="addPrecBtn" onclick="openPrecModal()">+ Add Preceptor</button>
+    </div>
+    <div class="ss" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px" id="precStats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card"><div class="ch"><h3>Site Utilization</h3></div><div class="cb"><div class="hm" id="siteHM"></div></div></div>
+      <div class="card"><div class="ch"><h3>Specialty Utilization</h3></div><div class="cb"><div class="hm" id="specHM"></div></div></div>
+    </div>
+    <div class="tw">
+      <table><thead><tr><th>Preceptor</th><th>Site</th><th>Specialty</th><th>Quarter</th><th>Total Slots</th><th>Assigned</th><th>Remaining</th><th>Utilization</th><th>Actions</th></tr></thead>
+      <tbody id="precBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PAGE: BLOCKS -->
+  <div class="page" id="page-blocks">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><h2 style="font-size:17px;font-weight:800;color:var(--navy)">📅 Rotation Blocks</h2><p style="font-size:11px;color:var(--gray600)">Specialty slots, quarters, availability</p></div>
+      <button class="btn btn-p" id="addBlockBtn" onclick="openBlockModal()">+ Add Block</button>
+    </div>
+    <div class="ss" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px" id="blockStats"></div>
+    <div class="tw">
+      <table><thead><tr><th>Rotation #</th><th>Quarter</th><th>Start</th><th>End</th><th>Specialty</th><th>Total Slots</th><th>Filled</th><th>Available</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="blocksBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PAGE: ANALYTICS -->
+  <div class="page" id="page-analytics">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><h2 style="font-size:17px;font-weight:800;color:var(--navy)">📈 Analytics Dashboard</h2></div>
+      <button class="btn btn-o" onclick="refreshCharts()">🔄 Refresh</button>
+    </div>
+    <div class="cg">
+      <div class="cb2"><h4>Specialty Demand</h4><canvas id="ch1"></canvas></div>
+      <div class="cb2"><h4>Allocation Status</h4><canvas id="ch2"></canvas></div>
+      <div class="cb2"><h4>Site Utilization %</h4><canvas id="ch3"></canvas></div>
+      <div class="cb2"><h4>CARE-44 Extracurricular Distribution</h4><canvas id="ch4"></canvas></div>
+      <div class="cb2"><h4>Students per Quarter</h4><canvas id="ch5"></canvas></div>
+      <div class="cb2"><h4>Preference Match Rate</h4><canvas id="ch6"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PAGE: REPORTS -->
+  <div class="page" id="page-reports">
+    <div style="margin-bottom:14px"><h2 style="font-size:17px;font-weight:800;color:var(--navy)">🖨 Reports & Export</h2><p style="font-size:11px;color:var(--gray600)">Print-ready reports for approved rotations only</p></div>
+    <div style="display:grid;grid-template-columns:180px 1fr;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:10px;font-weight:700;color:var(--gray600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Quarter Filter</div>
+        <button class="btn btn-p" id="rAll" onclick="setRptQ('All')" style="justify-content:center">All Quarters</button>
+        <button class="btn btn-o" id="rQ1" onclick="setRptQ('Q1')" style="justify-content:center">Q1</button>
+        <button class="btn btn-o" id="rQ2" onclick="setRptQ('Q2')" style="justify-content:center">Q2</button>
+        <button class="btn btn-o" id="rQ3" onclick="setRptQ('Q3')" style="justify-content:center">Q3</button>
+        <button class="btn btn-o" id="rQ4" onclick="setRptQ('Q4')" style="justify-content:center">Q4</button>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+          <button class="btn btn-p btn-sm" onclick="window.print()" style="justify-content:center">🖨 Print</button>
+          <button class="btn btn-g btn-sm" onclick="exportAllocCSV()" style="justify-content:center">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="padding:20px 26px;border-bottom:2px solid var(--navy)">
+          <div style="font-size:10px;color:var(--gray600);text-transform:uppercase;letter-spacing:.6px">King Saud bin Abdulaziz University for Health Sciences</div>
+          <div style="font-size:17px;font-weight:800;color:var(--navy);margin-top:3px">APPE Rotation Schedule</div>
+          <div style="font-size:12px;color:var(--gray600)">College of Pharmacy · Clinical Affairs Vice-Deanship · AY 2026–2027</div>
+          <div style="margin-top:6px;font-size:13px;font-weight:700;color:var(--navy)" id="rptLabel">All Quarters</div>
+          <div style="font-size:11px;color:var(--gray400)">Generated: <span id="rptDate"></span></div>
+        </div>
+        <div id="rptBody" style="padding:16px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: SETTINGS -->
+  <div class="page" id="page-settings">
+    <div style="margin-bottom:14px"><h2 style="font-size:17px;font-weight:800;color:var(--navy)">⚙️ Settings & Administration</h2></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card"><div class="ch"><h3>🔗 Google Sheet Integration</h3></div>
+        <div class="cb">
+          <div class="gsp"><h4>Connect a Published CSV URL</h4>
+            <div class="gs-row"><input type="text" id="gsUrl" placeholder="Paste Apps Script /exec URL (recommended) or Sheet ID…"><button class="btn btn-p btn-sm" onclick="connectGS()">Connect</button></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;margin-top:7px" id="gsSt">⚪ Not connected</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray600);margin-bottom:8px">
+            <b style="color:var(--green)">✅ Recommended:</b> Paste the <b>Apps Script /exec URL</b> (see instructions below) — bypasses all CORS issues.<br>
+            <span style="color:var(--gray400)">Or paste your Sheet ID as a fallback (may fail due to Google CORS restrictions)</span>
+          </div>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-o btn-sm" onclick="manualGS()">🔄 Refresh</button>
+            <button class="btn btn-o btn-sm" onclick="disconnectGS()">✕ Disconnect</button>
+          </div>
+          <div id="gsLast" style="font-size:10px;color:var(--gray400);margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="card"><div class="ch"><h3>📂 Excel Workbook Upload</h3></div>
+        <div class="cb">
+          <div class="alert al-i">Upload .xlsx with sheets: Rotation Blocks, Preceptor Availability, Users</div>
+          <div style="margin-top:10px;border:2px dashed var(--gray300);border-radius:8px;padding:18px;text-align:center;cursor:pointer" onclick="document.getElementById('xlFile').click()">
+            <div style="font-size:28px;margin-bottom:6px">📎</div>
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">Click to upload Excel file</div>
+            <div style="font-size:11px;color:var(--gray400)">.xlsx only</div>
+          </div>
+          <input type="file" id="xlFile" accept=".xlsx" style="display:none" onchange="handleXL(event)">
+          <div id="xlStatus" style="margin-top:8px;font-size:12px"></div>
+        </div>
+      </div>
+      <div class="card"><div class="ch"><h3>👤 Users</h3><button class="btn btn-p btn-sm" onclick="openUserModal()">+ Add User</button></div>
+        <div class="cb"><div class="tw"><table><thead><tr><th>Username</th><th>Role</th><th>Action</th></tr></thead><tbody id="usersBody"></tbody></table></div></div>
+      </div>
+      <div class="card"><div class="ch"><h3>📋 Audit Trail</h3><button class="btn btn-o btn-sm" onclick="clearAudit()">Clear</button></div>
+        <div class="cb" style="max-height:280px;overflow-y:auto" id="auditBody"></div>
+      </div>
+      <div class="card"><div class="ch"><h3>🗑️ Data Management</h3></div>
+        <div class="cb" style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-o" onclick="clearAlloc()">Reset Allocation</button>
+          <button class="btn btn-o" onclick="clearPrecs()">Reset Preceptors</button>
+          <button class="btn btn-o" onclick="clearBlks()">Reset Blocks</button>
+          <button class="btn btn-r" onclick="clearAll()">⚠ Clear ALL Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- CARE-44 student modal -->
+<div class="mo" id="c44Modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="md"><div class="mh"><div><h2 id="mName">—</h2><div style="font-size:11px;opacity:.7;margin-top:2px" id="mSub">—</div></div><button class="mc" onclick="document.getElementById('c44Modal').classList.remove('open')">✕</button></div>
+  <div class="mb" id="mBody"></div></div>
+</div>
+
+<!-- Preceptor modal -->
+<div class="mo" id="precModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="md" style="width:560px"><div class="mh"><h2 id="precMTitle">Add Preceptor</h2><button class="mc" onclick="document.getElementById('precModal').classList.remove('open')">✕</button></div>
+  <div class="mb">
+    <div class="fg">
+      <div class="ff"><label>Name</label><input id="pN" type="text" placeholder="Dr. Full Name"></div>
+      <div class="ff"><label>Site</label><input id="pSi" type="text" placeholder="e.g. KAMC Riyadh"></div>
+      <div class="ff"><label>Specialty</label><input id="pSp" type="text" placeholder="e.g. ICU"></div>
+      <div class="ff"><label>Quarter</label><select id="pQ"><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></div>
+      <div class="ff"><label>Rotation #</label><input id="pR" type="number" min="1" placeholder="1"></div>
+      <div class="ff"><label>Available Slots</label><input id="pS" type="number" min="1" placeholder="2"></div>
+    </div>
+    <div class="ff" style="margin-top:10px"><label>Notes</label><textarea id="pNo" rows="2" style="width:100%;border:1.5px solid var(--gray200);border-radius:8px;padding:8px;font-size:13px;outline:none" placeholder="Optional…"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-o" onclick="document.getElementById('precModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-p" onclick="savePrec()">Save Preceptor</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Block modal -->
+<div class="mo" id="blockModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="md" style="width:500px"><div class="mh"><h2 id="blkMTitle">Add Rotation Block</h2><button class="mc" onclick="document.getElementById('blockModal').classList.remove('open')">✕</button></div>
+  <div class="mb">
+    <div class="fg">
+      <div class="ff"><label>Rotation #</label><input id="bR" type="number" min="1" placeholder="1"></div>
+      <div class="ff"><label>Quarter</label><select id="bQ"><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></div>
+      <div class="ff"><label>Start Date</label><input id="bSt" type="date"></div>
+      <div class="ff"><label>End Date</label><input id="bEn" type="date"></div>
+      <div class="ff"><label>Specialty</label><input id="bSp" type="text" placeholder="e.g. ICU"></div>
+      <div class="ff"><label>Available Slots</label><input id="bSl" type="number" min="1" placeholder="4"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-o" onclick="document.getElementById('blockModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-p" onclick="saveBlock()">Save Block</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modify allocation modal -->
+<div class="mo" id="modModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="md" style="width:480px"><div class="mh"><h2>Modify Allocation</h2><button class="mc" onclick="document.getElementById('modModal').classList.remove('open')">✕</button></div>
+  <div class="mb">
+    <div style="font-weight:700;font-size:14px;margin-bottom:12px" id="modName"></div>
+    <div class="fg">
+      <div class="ff"><label>Specialty</label><input id="modSp" type="text"></div>
+      <div class="ff"><label>Preceptor</label><input id="modPr" type="text"></div>
+      <div class="ff"><label>Site</label><input id="modSi" type="text"></div>
+      <div class="ff"><label>Quarter</label><select id="modQ"><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></div>
+    </div>
+    <div class="ff" style="margin-top:10px"><label>Notes</label><textarea id="modNo" rows="2" style="width:100%;border:1.5px solid var(--gray200);border-radius:8px;padding:8px;font-size:13px;outline:none"></textarea></div>
+    <div id="modWarn" class="alert al-w" style="display:none;margin-top:8px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-o" onclick="document.getElementById('modModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-a" onclick="saveMod()">Save Modification</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- User modal -->
+<div class="mo" id="userModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="md" style="width:360px"><div class="mh"><h2>Add User</h2><button class="mc" onclick="document.getElementById('userModal').classList.remove('open')">✕</button></div>
+  <div class="mb">
+    <div class="ff" style="margin-bottom:10px"><label>Username</label><input id="uN" type="text" placeholder="username"></div>
+    <div class="ff" style="margin-bottom:10px"><label>Password</label><input id="uP" type="password" placeholder="password"></div>
+    <div class="ff" style="margin-bottom:14px"><label>Role</label><select id="uR"><option value="Admin">Admin</option><option value="Viewer">Viewer</option></select></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-o" onclick="document.getElementById('userModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-p" onclick="saveUser()">Save User</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* ═══════════════════════════════════════════════════
+   KSAU-HS EXPERIENTIAL EDUCATION PLATFORM
+   CARE-44 module is LOCKED — no scoring changes
+   New modules extend around CARE-44 outputs only
+═══════════════════════════════════════════════════ */
+
+/* ── FIREBASE ── */
+let db = null;
+try {
+  const FB = firebase.initializeApp({
+    apiKey:"AIzaSyCTSGsUFp76FBHLFIt0Q100A7ks3waXyHI",
+    authDomain:"care44-appe.firebaseapp.com",
+    databaseURL:"https://care44-appe-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"care44-appe",
+    storageBucket:"care44-appe.firebasestorage.app",
+    messagingSenderId:"188550548668",
+    appId:"1:188550548668:web:a4a7d79a5adf1addb254b9"
+  });
+  db = FB.database();
+} catch(e) { db = null; }
+
+/* ════ ① AUTH ════ */
+let CU = null; // current user
+let USERS = lsGet('plt_users') || [{username:'admin',password:'admin123',role:'Admin'},{username:'viewer',password:'view123',role:'Viewer'}];
+
+function doLogin() {
+  const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value;
+  const user=USERS.find(x=>x.username===u&&x.password===p);
+  if(!user){document.getElementById('lerr').style.display='block';return;}
+  CU=user;
+  document.getElementById('lerr').style.display='none';
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').classList.add('on');
+  document.getElementById('rolePill').textContent=user.role+': '+user.username;
+  if(user.role!=='Admin'){['adminAllocBtns','addPrecBtn','addBlockBtn'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});}
+  addAudit('Login',user.username,'','');
+  initPlatform();
+}
+function doLogout(){
+  if(!confirm('Sign out?'))return;
+  addAudit('Logout',CU?.username,'','');
+  CU=null;
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('lu').value='';document.getElementById('lp').value='';
+}
+
+/* ════ ② CARE-44 MODULE (LOCKED — DO NOT MODIFY CALCULATIONS) ════ */
+const BASE = [{"id":"1009","name":"Ruya Shnar Alshkrh","num":"431210121","mrn":"3254324","email":"alshkrh10121@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Biological Characterization of Several Medicinal Plants – Anticancer & Antimicrobial Activity","pi":"Dr. Shurouq Alowais","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published_Ruya%20Alshkrh.png","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%20Conference_Ruya%20Alshkrh.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Ruya%20Alshkrh.png","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2047","name":"Saad Abdullah Alhamdan","num":"431110138","mrn":"3213309","email":"alhamdan10138@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Comparative Analysis of Sepsis Outcomes Across BMI Groups: Retrospective Cohort","pi":"Dr. Abdulmajeed M. Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published_Saad%20Alhamdan.pdf","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ikaph%20Leader_Saad%20Alhamdan.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%A7%D9%84%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9%D9%8A%D8%A9_Saad%20Alhamdan.pdf","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1017","name":"Monerah Suliman Aljalajel","num":"421210280","mrn":"3109635","email":"421210280@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Characteristics, Management, and Outcomes of DOAC-Associated Major Bleeding","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2852_Monerah%20Aljalajel.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conference%20-%20APPE%20Requirments_Monerah%20Aljalajel.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service%20-%20APPE%20Requirments_Monerah%20Aljalajel.pdf","rs":4,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2029","name":"Razan Suliman Alnajdi","num":"431210084","mrn":"3251370","email":"alnajdi10084@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Retrospective Case Series","pi":"Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/research%20docs_Razan%20Alnajdi.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences%20certificates_Razan%20Alnajdi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"40","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/leadership%20certificates_Razan%20Alnajdi.pdf","rs":4,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2040","name":"Turki Rashed Almuaythir","num":"0508193950","mrn":"3442321","email":"almuaythir10064@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Complications and Outcomes of SARS-CoV-2 on Cirrhosis Patients","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Acceptance%20letter_Turki%20Almuaythir.PNG","conf_lvl":"Conference Leadership Role","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IKAPH%201_Turki%20Almuaythir.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/KING%20SAUD%20BIN%20ABDULAZIZ%20UNIVERSITY%20FOR%20HEALTH_Turki%20Almuaythir.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1015","name":"Fahad Abdullah Alqhtani","num":"43-1-1-1-0339","mrn":"3212355","email":"alqhtani10339@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Two research projects in publication phase","pi":"Dr. Maha Aldoughaim / Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Oral%20presentation%20at%20iKAPH_Fahad%20Alqhtani.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6+","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Host%20at%20ICCT%203rd%20confernce%20(1)_Fahad%20Alqhtani.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"10+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%A7%D9%84%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D9%88%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9%D8%A7%D8%AA_Fahad%20Alqhtani.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1011","name":"Joud Abdullah AbuSallam","num":"431210046","mrn":"3220829","email":"asiri10046@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Manuscript done, waiting for publication","pi":"Abdulmajeed Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_9854_Joud%20Asiri.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Joud%20AbuSallam%20Conferences_Joud%20Asiri.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Joud%20AbuSallam%20Community%20Services_Joud%20Asiri.pdf","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2051","name":"Yazeed Abdullah Bin Thnayan","num":"431110481","mrn":"3314898","email":"binthnayan10481@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Quality Improvement","r_title":"QI project — oral presentation at HPC","pi":"Mohammad Shawaqfah","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2750_Yazeed%20BinThnayan.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2747_Yazeed%20BinThnayan.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"10","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2751_Yazeed%20BinThnayan.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2039","name":"Abdulrahman Dhafer Alqarni","num":"411110166","mrn":"495461","email":"ALQARNI166@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Antimicrobial Outcomes in Sickle Cell Disease — VOC/ACS","pi":"Dr. Maha AlDoughaim","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/iKAPH%20Acceptance_ABDULRAHMAN%20ALQARNI.png","conf_lvl":"Conference Leadership Role","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/iKAPH%20Mock%20Interview%20Team%20Leader_ABDULRAHMAN%20ALQARNI.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Save%20Them%20With%20a%20Cell%20Campain_ABDULRAHMAN%20ALQARNI.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2046","name":"Raghad Zaid Alsabr","num":"0558252351","mrn":"3251207","email":"alsabr10093@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Fondaparinux vs Argatroban for Heparin-Induced Thrombocytopenia","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/fmed-13-1794887_Raghad%20Alsabr.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Media%20certificate_Raghad%20Alsabr.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/PHOTO-2026-05-23-22-50-06_Raghad%20Alsabr.jpg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2024","name":"Nourah Nasser Ali Alqhtani","num":"431210332","mrn":"3250608","email":"alqhtani10332@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Retrospective Case Series","pi":"Dr. Lama Alfehiad","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Screenshot%202026-05-22%20at%2021.43.31_Nourah%20Alqhtani.png","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Screenshot%202026-05-22%20at%2022.09.22_Nourah%20Alqhtani.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Nourah_Certificates_Nourah%20Alqhtani.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2018","name":"Sarah Mubarak Alnasser","num":"431210165","mrn":"3263183","email":"alnasser10165@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_3926_Sarah%20Alnasser.png","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_0400_Sarah%20Alnasser.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_4741_Sarah%20Alnasser.jpeg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1020","name":"Wateen Sameer Almalki","num":"431210351","mrn":"3251270","email":"almalki10351@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Ketamine-Based Sedation in Severe Burn and Inhalational Lung Injury ICU","pi":"Faisal Al Mutairi","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_1207_Wateen%20Almalki.jpeg","conf_lvl":"Committee Member","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1208_Wateen%20Almalki.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">10","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Pharmacy%20day%202.pdf_Wateen%20Almalki%201.png","rs":4,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"1010","name":"Reem Moath Alali","num":"431210129","mrn":"3251329","email":"alali10129@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_7427_Reem%20Alali.png","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Certificate_Reem%20Alali.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/VolunteerEvents_777452_Reem%20Alali.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1008","name":"Amani Mohammed Alsubaie","num":"431210030","mrn":"611096","email":"alsubaie10030@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Published article at MDPI","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Published%20article_Amani%20Alsubaie.pdf","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%20organizer_Amani%20Alsubaie.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%203_Amani%20Alsubaie.pdf","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2025","name":"Ghadah Nasser Almutairi","num":"431210231","mrn":"3251352","email":"almutairi10231@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"PCSK9 Inhibitor Therapy — Cardiovascular Outcomes in Diabetic ACS Patients","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4212_Ghadah%20Almutairi.jpeg","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_9512_Ghadah%20Almutairi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_0307_Ghadah%20Almutairi.jpeg","rs":4,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2026","name":"Linah Sultan Alotaibi","num":"431210364","mrn":"3250712","email":"alotaibi10364@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"DAPAGLIFLOZIN on Ventricular Arrhythmia in HF Patients with ICD","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Linah%20Alotaibi_Linah%20Alotaibi.png","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1597_Linah%20Alotaibi.jpg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">7","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/photo_5800668154810797745_y_Linah%20Alotaibi.jpg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2022","name":"Shahad Rashed Almugren","num":"431210193","mrn":"3250637","email":"almugren10193@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Two posters: manuscript completed + second project","pi":"Dr. Nada Alsuhebany / Dr. Mohammed Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B6AB9F77D-CFCD-42E4-A954-E961FEA0B3C0%7D&file=Poster%202_Shahad%20Almugren.docx","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BFF1CEF41-5090-4798-9A1B-9F09096E99EA%7D&file=Conference_Shahad%20Almugren.docx","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"13","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B8638811D-0C7A-4140-9F4E-48509881780A%7D&file=Community%20service_Shahad%20Almugren.docx","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2036","name":"Shumukh Majed Alsubaie","num":"431210188","mrn":"662511","email":"alsubaie10188@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Pembrolizumab vs Durvalumab — Efficacy & Safety Assessment","pi":"Dr. Wesam Abdel Razaq","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/ihop_student_poster_Shumukh%20Alsubaie.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ihop_Shumukh%20Alsubaie.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Leader%20at%20Pharmacy%20club_Shumukh%20Alsubaie.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2052","name":"Saleh Mansoor Albarrak","num":"431110180","mrn":"N/A","email":"albarrak10180@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Antidotal Therapies in ED Toxicology — Efficacy, Safety, Optimization","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_5709_Saleh%20Albarrak.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/66DB3D18-CD74-462A-AA52-4913184D80EE_Saleh%20Albarrak.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_5661_Saleh%20Albarrak.jpeg","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2027","name":"Sarah Abdullah Almandil","num":"431210162","mrn":"1147655","email":"almandil10162@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Research manuscript completed, presented as poster","pi":"Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BFB74D1AA-1246-4710-B7F8-E7FA1757E504%7D&file=Researche_Sarah%20Almandil.docx","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BB4CA1D76-BA3A-4239-BFB0-34F1DD159D68%7D&file=Conferences_Sarah%20Almandil.docx","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B6A089A06-B20D-4540-8295-8A404ED7E67E%7D&file=Community%20service_Sarah%20Almandil.docx","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2035","name":"Abdulmajeed Ali Ghazwani","num":"431-1-1-10285","mrn":"N/A","email":"ghazwani10285@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Presented at conference — manuscript with PI","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2053_Abdulmajeed%20Ghazwani.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2199_Abdulmajeed%20Ghazwani.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2164_Abdulmajeed%20Ghazwani.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2042","name":"Raghad Mohammed Alanazi","num":"431210099","mrn":"667142","email":"alanazi10099@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"SGLT2 Inhibitors on Ventricular Arrhythmias and ICD in Heart Failure","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4873_Raghad%20Alanazi.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"7","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_4757_Raghad%20Alanazi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"5","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20service_Raghad%20Alanazi.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2023","name":"Abdulaziz Alrajhi","num":"431110222","mrn":"2696983","email":"alrajhi10222@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Clinical Impact of Acute Rejection — waiting for publication","pi":"Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7B9BCCFD7D-F2E3-4988-BEED-6209F4B27FEA%7D&file=Clinical_Impact_of_Acute_Rejection_on_1_Year__Abdulaziz%20Alrajhi.docx","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_6764_Abdulaziz%20Alrajhi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community_Abdulaziz%20Alrajhi.pdf","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2","name":"Abeer Fahad Albakran","num":"431210220","mrn":"664736","email":"albakran10220@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Efficacy of Gut-Altering Medications on Immune Checkpoint Therapy in NSCLC","pi":"Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IHOP7%20Poster_Abeer%20Albakran.pdf","conf_lvl":"Conference Leadership Role","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ihop_Attendee_Abeer%20Albakran.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"7","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/7x%20community%20services_Abeer%20Albakran.pdf","rs":2,"cs":4,"cms":4,"dup":true,"subs":2},{"id":"2028","name":"Faisal Khalid Alzuraiqi","num":"43-1-1-1-0350","mrn":"681326","email":"alzuraiqi10350@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"Flavoring Agent Selection for Taste Masking of Azithromycin","pi":"Prof. Aiman A. Obaidat","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Paper%20%20prof.Aiman_Faisal%20Alzuraiqi.pdf","conf_lvl":"Conference Leadership Role","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2254_Faisal%20Alzuraiqi.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2270_Faisal%20Alzuraiqi.jpeg","rs":2,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2054","name":"Nawaf Mohammed Albogami","num":"431110458","mrn":"3430028","email":"albogami10458@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Safety & Efficacy of Acetazolamide in Acute Heart Failure","pi":"Dr. Lama Al Fehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG-20260524-WA0004_Nawaf%20Albogami.jpg","conf_lvl":"Committee Member","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Organizing%20Team%20-%20Certificates_Nawaf%20Albogami.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Volunteer_107753_Nawaf%20Albogami.pdf","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2030","name":"Fatimah Abdullah Balatif","num":"411210227","mrn":"2994675","email":"BALATIF227@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Fixed-Dose Hydrocortisone in Septic Shock — Clinical Outcomes by Body Weight","pi":"Dr. Abdulmajeed Alshehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/PHOTO-2026-05-20-16-26-45_FATIMA%20BALATIF.jpeg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/participation-certificate-1128181169_FATIMA%20BALATIF.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D9%85%D9%84%D9%81%20%D8%A7%D9%84%D8%AA%D8%B7%D9%88%D8%B9_FATIMA%20BALATIF.pdf","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2056","name":"Abdullah Abdulaziz Alturki","num":"36-111-0232","mrn":"395647","email":"Alturki232@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Cross-sectional study — complete, oral presentation","pi":"Dr. Lama Al Fehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/COP-RU-55-2025%20-%20ADDING%20CO-INVESTIGATOR%20TO%20TH_Abdullah%20Alturki%201.pdf","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/photo_1_Abdullah%20Alturki%201.jpg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/photo_2026-05-24_22-00-07_Abdullah%20Alturki.jpg","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"1007","name":"Weam Abualghaith","num":"431210354","mrn":"3250640","email":"abualghaith10354@ksau-hs.edu.sa","r_status":"Published","r_type":"Original Research","r_title":"Fondaparinux vs Argatroban for Heparin-Induced Thrombocytopenia — Published","pi":"Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Weam%20Abualghaith%20Published%20Research_Weam%20Abualghaith.pdf","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Weam_Abualghaith_SSCP25_Attendance_Weam%20Abualghaith%201.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Weam_Abualghaith_Community_Services_Weam%20Abualghaith%201.pdf","rs":4,"cs":2,"cms":4,"dup":true,"subs":2},{"id":"2021","name":"Shahad Abdulaziz Bin Surayyi","num":"431210200","mrn":"6667782","email":"binsurayyi10200@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Data collection and manuscript complete, presented as poster","pi":"Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Posters_Shahad%20BinSurayyi.pdf","conf_lvl":"Committee Member","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences_Shahad%20BinSurayyi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"15+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Shahad%20BinSurayyi.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2057","name":"Abdulmajeed Saleh Alshamrani","num":"421110270","mrn":"3255225","email":"421110270@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Trastuzumab Deruxtecan & Sacituzumab Govitecan in Breast Cancer — Single-Center Cohort","pi":"Dr. Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/HPC%202025%20Poster%20Abdulmajeed%20Alshamtani%20(1)_ABDULMAJEED%20SALEH%20S.pdf","conf_lvl":"Conference Leadership Role","conf_n":"6","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/HPC%209%20%D8%B4%D9%87%D8%A7%D8%AF%D8%A9_ABDULMAJEED%20SALEH%20S.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/%D8%AD%D9%85%D9%84%D8%A7%D8%AA%20%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D9%85%D8%AC%D9%8A%D8%AF%20%D8%A7%D9%84%D8%B4%D9%85%D8%B1%D8%A7%D9%86%D9%8A_ABDULMAJEED%20SALEH%20S.pdf","rs":1,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"2048","name":"Raneem Alessa","num":"431210105","mrn":"3256731","email":"alessa10105@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Research complete, presented as poster","pi":"Dr. Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2722_Raneem%20Alessa.jpeg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/OTC_Raneem%20Alessa.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"several","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Leader_Raneem%20Alessa.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2034","name":"Lama Sari Alsuwailem","num":"431210262","mrn":"3250981","email":"alsuwailem10262@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Systematic Review / Meta-analysis","r_title":"Systematic review/meta-analysis — peer reviewed","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_3656_Lama%20Alsuwailem%201.png","conf_lvl":"Committee Member","conf_n":"9","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/volCertificate_Lama%20Alsuwailem.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":">30","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_8020_Lama%20Alsuwailem.jpeg","rs":2,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2031","name":"Rahaf Alkhalifah","num":"431210376","mrn":"3215453","email":"alkhalifah10376@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Tolerability and Treatment Interruption with Trastuzumab Deruxtecan in HER2+ Breast Cancer","pi":"Dr. Mohammed Alzahrani","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/ihop_student_poster_Rahaf%20Alkhalifah.pdf","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/ICCT-Scientific%20Team_Rahaf%20Alkhalifah.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"17","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Campaign-Pharmacy%20Club%202_Rahaf%20Alkhalifah.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2045","name":"Rahaf Jubran Wadaeani","num":"913848","mrn":"3251959","email":"wadaeani10111@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"SGLT2 Inhibitors in Advanced CKD and ESKD — Real-World Cohort","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2692_Rahaf%20Wadaeani.jpeg","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_2697_Rahaf%20Wadaeani.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_2701_Rahaf%20Wadaeani.jpeg","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2043","name":"Khaled Ibrahim Alkhreiigi","num":"421110081","mrn":"8252274","email":"421110081@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Manuscript ready to publish","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_1315_KHALED%20IBRAHIM%20S%20ALK.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"8","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_6866_KHALED%20IBRAHIM%20S%20ALK.jpeg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"11","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Khaled%20alkhreiigi_KHALED%20IBRAHIM%20S%20ALK.pdf","rs":2,"cs":4,"cms":3,"dup":false,"subs":1},{"id":"2041","name":"Alhanouf Alhaqbani","num":"421210015","mrn":"3251517","email":"421210015@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Apixaban-Associated Major Bleeding — Ongoing","pi":"Dr. Lama Alfehaid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_4971_ALHANOUF%20FARIS%20F%20ALH.jpeg","conf_lvl":"Conference Leadership Role","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_4972_ALHANOUF%20FARIS%20F%20ALH.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/badges_collection_ALHANOUF%20FARIS%20F%20ALH.pdf","rs":1,"cs":4,"cms":4,"dup":false,"subs":1},{"id":"1024","name":"Remaz Khaled Alturiki","num":"431210137","mrn":"3251476","email":"alturiki10137@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Manuscript completed — poster presentation","pi":"Dr. Nada Alsuhebany","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8990_Remaz%20Alturiki.jpeg","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/SIPHA_Remaz%20Alturiki.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/OTC%20Community_Remaz%20Alturiki.pdf","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"1021","name":"Rayyan Munif Alshammari","num":"381110151","mrn":"2840414","email":"alshammari151@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Preparations for publication","pi":"Dr. Mohammad Shwaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8686_Rayyan%20Alshammari.jpeg","conf_lvl":"Committee Member","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_8688_Rayyan%20Alshammari.jpeg","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"2","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_8691_Rayyan%20Alshammari.jpeg","rs":2,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2055","name":"Dalal Fahad Alosaimi","num":"431210073","mrn":"N/A","email":"alotaibi10073@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Fixed Hydrocortisone in Septic Shock — Safety & Efficacy","pi":"Dr. Abdulmajeed Al-shehri","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_7399_Dalal%20Alotaibi.png","conf_lvl":"Attendee (≥2 conferences)","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_7397_Dalal%20Alotaibi.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_7391_Dalal%20Alotaibi.jpeg","rs":2,"cs":2,"cms":4,"dup":false,"subs":1},{"id":"1014","name":"Joud Mohammed Alotaibi","num":"431210048","mrn":"623712","email":"alotaibi10048@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Clinical Characteristics in Patients with Invasive Aspergillosis","pi":"Dr. Khalid Bin Saleh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IRBApprovalMemoForRegularProposals%203_Joud%20AlOtaibi.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conferences_Joud%20AlOtaibi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"6+","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20services_Joud%20AlOtaibi.pdf","rs":1,"cs":3,"cms":4,"dup":false,"subs":1},{"id":"2020","name":"Amani Abdullah Alrubayan","num":"431210040","mrn":"3251401","email":"alrubayan10040@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Original Research","r_title":"Nephropathy Risk in Organ Transplant Patients on Tacrolimus","pi":"Aiman Obaidat","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Kimarc_Amani%20Alrubayan%201.jpg","conf_lvl":"Committee Member","conf_n":"5","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/SSCP%2025_Amani%20Alrubayan%201.png","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20pharmacy%201_Amani%20Alrubayan.pdf","rs":1,"cs":3,"cms":4,"dup":true,"subs":2},{"id":"2053","name":"Waleed Abdulrhman Almutairi","num":"431110470","mrn":"N/A","email":"almutairi10470@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Original Research","r_title":"Antidotal Therapies in ED Toxicology — Assessment","pi":"Dr. Mohammed Alrashed","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2656_Waleed%20Almutairi%201.jpeg","conf_lvl":"Committee Member","conf_n":"7","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_1709_Waleed%20Almutairi.jpeg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"3","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Service_Waleed%20Almutairi.pdf","rs":2,"cs":3,"cms":3,"dup":true,"subs":2},{"id":"1003","name":"Mada Zaid Hazazi","num":"431210295","mrn":"3250639","email":"hazazi10295@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"In Silico SAR Study of Kainoids Binding to GluK1 Kainate Receptors","pi":"Dr. Reem Alkhodier","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_2816_Mada%20Hazazi.png","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4+","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Conference_Mada%20Hazazi.pdf","comm_lvl":"Organizer / Project Leader (≥1 activity)","comm_n":"8","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20Services_Mada%20Hazazi.pdf","rs":2,"cs":2,"cms":4,"dup":false,"subs":1},{"id":"2033","name":"Sara Mohammad Alsarhan","num":"431210166","mrn":"2426813","email":"alsarhan10166@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Systematic Review / Meta-analysis","r_title":"Systematic Review — Oral presentation","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Sara_Mohammad_Alsarhan%20(1)_Sara%20Alsarhan.pdf","conf_lvl":"Attendee (≥2 conferences)","conf_n":"4","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_9788_Sara%20Alsarhan.pdf","comm_lvl":"Active Participant (≥3 activities)","comm_n":"6","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/final_all_documents_Sara%20Alsarhan.pdf","rs":2,"cs":2,"cms":3,"dup":false,"subs":1},{"id":"1022","name":"Abdullah Abdulrahman Alasmari","num":"43-1-1-1-0261","mrn":"3247598","email":"alasmari10261@ksau-hs.edu.sa","r_status":"Ongoing","r_type":"Experimental","r_title":"RP-HPLC Development and Validation — Preparing for publication","pi":"Prof. Mahmoud Mansour","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Development%20and%20Validation%20of%20an%20RP-HPLC_Abdullah%20Alasmari.pdf","conf_lvl":"Committee Member","conf_n":"3","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/photo_5798742519108538617_y_Abdullah%20Alasmari.jpg","comm_lvl":"Active Participant (≥3 activities)","comm_n":"4","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Community%20service%20participations_Abdullah%20Alasmari.pdf","rs":1,"cs":3,"cms":3,"dup":false,"subs":1},{"id":"2044","name":"Abdullah Aldakkan","num":"43-1-1-1-0507","mrn":"3209663","email":"aldakkan10507@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Original Research","r_title":"Safety and Efficiency of Acetazolamide in Acute Heart Failure","pi":"Dr. Lama Alfeihid","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/IMG_8255_Abdullah%20Aldakkan.jpeg","conf_lvl":"Attendee (≥2 conferences)","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/IMG_8472_Abdullah%20Aldakkan.jpeg","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/IMG_1316_Abdullah%20Aldakkan.jpeg","rs":2,"cs":2,"cms":1,"dup":false,"subs":1},{"id":"2037","name":"Mohammad Ahmed Alghamdi","num":"421110363","mrn":"3430029","email":"421110363@ksau-hs.edu.sa","r_status":"Presented as Oral","r_type":"Systematic Review / Meta-analysis","r_title":"Statistical analysis complete, manuscript underway","pi":"Dr. Mohammad Shawaqfeh","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Question/Supporting%20picture%20for%20Oral%20Presentation_MOHAMMAD%20AHMED%20M%20ALG.jpeg","conf_lvl":"Attendee (≥2 conferences)","conf_n":"2","conf_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20(Acceptance%20letter,%C2%A0Cer/Supporting%20picture%20for%20Oral%20Presentation_MOHAMMAD%20AHMED%20M%20ALG.jpeg","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/Volunteer_MOHAMMAD%20AHMED%20M%20ALG.jpeg","rs":2,"cs":2,"cms":1,"dup":false,"subs":1},{"id":"1019","name":"Abdulmalik Alanazi","num":"43-1-1-1-0289","mrn":"N/A","email":"alanazi10289@ksau-hs.edu.sa","r_status":"Presented as Poster","r_type":"Experimental","r_title":"Sitagliptin Manuscript — aiming to publish","pi":"Prof. Mahmoud Mansour","r_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/_layouts/15/Doc.aspx?sourcedoc=%7BD87C2EBE-1855-4F21-9F57-6CFC588A0B18%7D&file=Sitagliptin%20Manuscript_Abdulmalik%20Alanazi.docx","conf_lvl":"Attendee (1 conference)","conf_n":"1","conf_doc":"","comm_lvl":"","comm_n":"0","comm_doc":"","rs":2,"cs":1,"cms":0,"dup":false,"subs":1},{"id":"2050","name":"Mohammed Sattam Alanazi","num":"421110374","mrn":"542594","email":"421110374@ksau-hs.edu.sa","r_status":"","r_type":"","r_title":"","pi":"","r_doc":"","conf_lvl":"","conf_n":"0","conf_doc":"","comm_lvl":"General Volunteer","comm_n":"1","comm_doc":"https://ksauhsedu-my.sharepoint.com/personal/alrashidm_ksau-hs_edu_sa/Documents/Apps/Microsoft%20Forms/Clinical%20Academic%20Ranking%20%26%20Evaluation%20(CARE-44)/Upload%20Supporting%20Document%20%20(Upload%20official%20docum/image_MOHAMMED%20SATTAM%20M%20AL.jpg","rs":0,"cs":0,"cms":1,"dup":true,"subs":2}];/* ─ LOCKED CARE-44 SCORING (DO NOT MODIFY) ─ */
+let C44 = {};  // {studentId: {gpa_pts, exp_pts}}
+let c44SF='extra', c44SA=false, c44F=[], c44P=1;
+const C44PER=20;
+
+function c44Total(s){const g=C44[s.id]?.gpa_pts,e=C44[s.id]?.exp_pts;if(g==null||e==null)return null;return parseFloat(g)+parseFloat(e)+s.rs+s.cms+s.cs;}
+function c44Extra(s){return s.rs+s.cms+s.cs;}
+function c44MissingDoc(s){return(!s.r_doc&&s.r_status)||(!s.conf_doc&&s.conf_lvl)||(!s.comm_doc&&s.comm_lvl);}
+
+function renderC44Summary(){
+  const tot=BASE.length,done=BASE.filter(s=>C44[s.id]?.gpa_pts!=null&&C44[s.id]?.exp_pts!=null).length;
+  const dups=BASE.filter(s=>s.dup).length;
+  const avgX=Math.round(BASE.reduce((a,b)=>a+c44Extra(b),0)/tot);
+  const ct=BASE.map(s=>c44Total(s)).filter(v=>v!=null);
+  const avgT=ct.length?Math.round(ct.reduce((a,b)=>a+b,0)/ct.length):'—';
+  const el=document.getElementById('summaryStrip');if(!el)return;
+  el.innerHTML=`<div class="sc"><div class="v">${tot}</div><div class="l">Students</div></div>
+    <div class="sc ok"><div class="v">${done}/${tot}</div><div class="l">GPA+Exp Entered</div></div>
+    <div class="sc amber"><div class="v">${tot-done}</div><div class="l">Pending</div></div>
+    <div class="sc warn"><div class="v">${dups}</div><div class="l">Multi-Submit ⚠</div></div>
+    <div class="sc"><div class="v">${avgX}/12</div><div class="l">Avg Extracurricular</div></div>
+    <div class="sc ok"><div class="v">${avgT}</div><div class="l">Avg Total</div></div>`;
+}
+
+function sPill(s){
+  if(!s)return'<span class="pill p-none">None</span>';
+  if(s.includes('Published'))return'<span class="pill p-pub">Published</span>';
+  if(s.includes('Oral'))return'<span class="pill p-oral">Oral</span>';
+  if(s.includes('Poster'))return'<span class="pill p-poster">Poster</span>';
+  if(s.includes('Ongoing'))return'<span class="pill p-ong">Ongoing</span>';
+  return`<span class="pill p-none">${s}</span>`;
+}
+
+function doFilter(){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  const fR=document.getElementById('fRes')?.value||'';
+  const fC=document.getElementById('fConf')?.value||'';
+  const fDup=document.getElementById('fDup')?.checked||false;
+  const fN=document.getElementById('fNeeds')?.checked||false;
+  const fD=document.getElementById('fDoc')?.checked||false;
+  c44F=BASE.filter(s=>{
+    const txt=(s.name+s.num+s.email+s.r_title+s.pi+s.mrn).toLowerCase();
+    if(q&&!txt.includes(q))return false;
+    if(fR==='none'&&s.r_status)return false;
+    if(fR&&fR!=='none'&&!s.r_status.includes(fR))return false;
+    if(fC&&!s.conf_lvl.includes(fC))return false;
+    if(fDup&&!s.dup)return false;
+    if(fN&&C44[s.id]?.gpa_pts!=null&&C44[s.id]?.exp_pts!=null)return false;
+    if(fD&&!c44MissingDoc(s))return false;
+    return true;
+  });
+  c44F.sort((a,b)=>{
+    let va,vb;
+    if(c44SF==='total_100'){va=c44Total(a)??-1;vb=c44Total(b)??-1;}
+    else if(c44SF==='gpa_pts'){va=C44[a.id]?.gpa_pts??-1;vb=C44[b.id]?.gpa_pts??-1;}
+    else if(c44SF==='exp_pts'){va=C44[a.id]?.exp_pts??-1;vb=C44[b.id]?.exp_pts??-1;}
+    else if(c44SF==='extra'){va=c44Extra(a);vb=c44Extra(b);}
+    else{va=a[c44SF]??'';vb=b[c44SF]??'';}
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return c44SA?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+  });
+  c44P=1;renderC44Table();
+}
+function c44Sort(f){if(c44SF===f)c44SA=!c44SA;else{c44SF=f;c44SA=false;}doFilter();}
+
+function renderC44Table(){
+  const tbody=document.getElementById('tbody');const empty=document.getElementById('emptyState');if(!tbody)return;
+  if(!c44F.length){tbody.innerHTML='';empty.style.display='block';renderC44Pg();return;}
+  empty.style.display='none';
+  const sl=c44F.slice((c44P-1)*C44PER,c44P*C44PER);
+  tbody.innerHTML=sl.map((s,i)=>{
+    const rank=(c44P-1)*C44PER+i+1,gpa=C44[s.id]?.gpa_pts,exp=C44[s.id]?.exp_pts,tot=c44Total(s);
+    const ri=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    const rc=rank===1?'rk-g':rank===2?'rk-s':rank===3?'rk-b':'';
+    const rowCls=s.dup?'dup-row':(gpa==null||exp==null)?'needs-data':'';
+    const pct=tot?(tot/100*100):0;
+    return`<tr class="${rowCls}" onclick="openC44Modal('${s.id}')">
+      <td class="rk ${rc}">${ri}</td>
+      <td><div style="font-weight:600">${s.name}${s.dup?'<span class="flag">⚠ Multi</span>':''}</div><div style="font-size:11px;color:var(--gray400)">${s.email}</div></td>
+      <td>${s.num}</td>
+      <td>${sPill(s.r_status)}</td>
+      <td style="text-align:center" onclick="event.stopPropagation()">${mkPtsInput(s.id,'gpa',gpa,44)}</td>
+      <td style="text-align:center" onclick="event.stopPropagation()">${mkPtsInput(s.id,'exp',exp,44)}</td>
+      <td style="text-align:center"><b style="color:#0e7490">${s.rs}</b><span style="color:var(--gray400);font-size:10px">/4</span></td>
+      <td style="text-align:center"><b style="color:#065f46">${s.cms}</b><span style="color:var(--gray400);font-size:10px">/4</span></td>
+      <td style="text-align:center"><b style="color:#9a3412">${s.cs}</b><span style="color:var(--gray400);font-size:10px">/4</span></td>
+      <td style="text-align:center">${tot!=null?`<div style="font-size:18px;font-weight:800;color:var(--navy)">${tot.toFixed(1)}</div><div class="pb"><div class="pf" style="width:${pct}%"></div></div>`:`<div style="font-size:11px;color:var(--amber)">Enter GPA & Exp.</div>`}</td>
+      <td onclick="event.stopPropagation()"><button style="background:${c44MissingDoc(s)?'var(--red)':'var(--green)'};color:white;border:none;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer" onclick="openC44Modal('${s.id}')">${c44MissingDoc(s)?'⚠ Check':'✓ Docs'}</button></td>
+    </tr>`;
+  }).join('');
+  renderC44Pg();
+}
+
+function mkPtsInput(sid,field,val,max){
+  if(val!=null)return`<input type="number" min="0" max="${max}" step="0.1" class="pts-input" value="${parseFloat(val).toFixed(1)}" onchange="savePts('${sid}','${field}',this)" oninput="this.classList.add('unsaved')" style="width:62px">`;
+  return`<div class="pts-empty" onclick="activatePts(this,'${sid}','${field}')">+ Enter</div>`;
+}
+function activatePts(el,sid,field){
+  const inp=document.createElement('input');inp.type='number';inp.min=0;inp.max=44;inp.step=0.1;inp.className='pts-input unsaved';inp.placeholder='0.0';inp.style.width='62px';
+  inp.onchange=()=>savePts(sid,field,inp);inp.oninput=()=>inp.classList.add('unsaved');
+  el.replaceWith(inp);inp.focus();
+}
+async function savePts(sid,field,el){
+  const v=parseFloat(el.value);if(isNaN(v)||v<0||v>44){toast('Value must be 0–44',true);return;}
+  if(!C44[sid])C44[sid]={};C44[sid][`${field}_pts`]=v;lsSet('c44_state',C44);
+  el.classList.remove('unsaved');el.classList.add('saved');setTimeout(()=>el.classList.remove('saved'),2000);
+  renderC44Summary();renderC44Table();
+  toast(`✓ ${field==='gpa'?'GPA':'Experiential'} saved for ${BASE.find(s=>s.id===sid)?.name}`);
+  addAudit('Score Entry',CU?.username,`${field.toUpperCase()} ${sid}`,String(v));
+  if(db)try{await db.ref(`care44/ay2027/${sid}`).update({[`${field}_pts`]:v});}catch(e){}
+}
+function renderC44Pg(){
+  const tot=c44F.length,pgs=Math.ceil(tot/C44PER);
+  const s=(c44P-1)*C44PER+1,e=Math.min(c44P*C44PER,tot);
+  let h=`<span style="font-size:12px;color:var(--gray600)">Showing ${s}–${e} of ${tot}</span><div style="display:flex;gap:4px">`;
+  h+=`<button class="btn btn-o btn-sm" onclick="goC44(${c44P-1})" ${c44P===1?'disabled':''}>← Prev</button>`;
+  for(let i=1;i<=pgs;i++)h+=`<button class="btn btn-sm ${i===c44P?'btn-p':'btn-o'}" onclick="goC44(${i})">${i}</button>`;
+  h+=`<button class="btn btn-o btn-sm" onclick="goC44(${c44P+1})" ${c44P===pgs||!pgs?'disabled':''}>Next →</button></div>`;
+  const pg=document.getElementById('pgBar');if(pg)pg.innerHTML=h;
+}
+function goC44(p){const pgs=Math.ceil(c44F.length/C44PER);if(p<1||p>pgs)return;c44P=p;renderC44Table();}
+
+/* CARE-44 Student Modal (LOCKED) */
+function openC44Modal(sid){
+  const s=BASE.find(b=>b.id===sid);if(!s)return;
+  document.getElementById('mName').textContent=s.name;
+  document.getElementById('mSub').textContent=`Student # ${s.num} · MRN ${s.mrn} · ${s.email}`;
+  const gpa=C44[sid]?.gpa_pts,exp=C44[sid]?.exp_pts,tot=c44Total(s);
+  const rd=s.r_doc?s.r_doc.split(';').map(u=>u.trim()).filter(Boolean):[];
+  const cd=s.conf_doc?s.conf_doc.split(';').map(u=>u.trim()).filter(Boolean):[];
+  const cmd=s.comm_doc?s.comm_doc.split(';').map(u=>u.trim()).filter(Boolean):[];
+  function dlinks(docs,cat){
+    if(!docs.length)return`<p class="no-doc">⚠ No ${cat} document uploaded</p>`;
+    return`<div class="dl">${docs.map((d,i)=>`<a class="dlink" href="${d}" target="_blank"><span class="dn">${i+1}</span>${decodeURIComponent(d.split('/').pop().split('_')[0]).substring(0,48)}</a>`).join('')}</div>`;
+  }
+  document.getElementById('mBody').innerHTML=`
+    ${s.dup?'<div class="alert al-w">⚠ Multiple submissions — showing best-scoring entry.</div>':''}
+    <div class="ms"><h3>CARE-44 Score Breakdown (out of 100)</h3>
+      <div class="sboxes">
+        <div class="sbox sb-gpa"><div class="sv">${gpa!=null?parseFloat(gpa).toFixed(1):'—'}</div><div class="so">/44</div><div class="sl">GPA 44%</div></div>
+        <div class="sbox sb-exp"><div class="sv">${exp!=null?parseFloat(exp).toFixed(1):'—'}</div><div class="so">/44</div><div class="sl">Exp. 44%</div></div>
+        <div class="sbox sb-res"><div class="sv">${s.rs}</div><div class="so">/4</div><div class="sl">Research 4%</div></div>
+        <div class="sbox sb-cm"><div class="sv">${s.cms}</div><div class="so">/4</div><div class="sl">Community 4%</div></div>
+        <div class="sbox sb-cf"><div class="sv">${s.cs}</div><div class="so">/4</div><div class="sl">Conference 4%</div></div>
+      </div>
+      <div class="sbox sb-tot" style="display:inline-block;padding:10px 26px;margin-top:8px"><div class="sv">${tot!=null?tot.toFixed(1):'Pending'}</div><div class="so">${tot!=null?'/100':''}</div><div class="sl">Composite Score</div></div>
+    </div>
+    <div class="ms"><h3>Enter / Edit GPA & Experiential Points</h3>
+      <div class="me-row">
+        <div class="me-f"><label>GPA Points (0–44)</label><input type="number" id="m-gpa" class="me-f" min="0" max="44" step="0.1" value="${gpa!=null?parseFloat(gpa).toFixed(1):''}" placeholder="e.g. 38.5" style="border:1.5px solid var(--gray200);border-radius:8px;padding:8px 11px;font-size:14px;font-weight:700;outline:none;width:100%"><span class="me-hint">44% — GPA + Progress Test (4%)</span></div>
+        <div class="me-f"><label>Experiential Points (0–44)</label><input type="number" id="m-exp" min="0" max="44" step="0.1" value="${exp!=null?parseFloat(exp).toFixed(1):''}" placeholder="e.g. 41.0" style="border:1.5px solid var(--gray200);border-radius:8px;padding:8px 11px;font-size:14px;font-weight:700;outline:none;width:100%"><span class="me-hint">44% — IPPE + APPE grades</span></div>
+      </div>
+      <button class="save-btn" onclick="saveC44Modal('${sid}')">💾 Save & Recalculate</button>
+    </div>
+    <div class="ms"><h3>Research (${s.rs}/4 pts)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--gray400)">Status</div><div>${sPill(s.r_status)}</div></div>
+        <div><div style="font-size:10px;color:var(--gray400)">Type</div><div>${s.r_type||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--gray400)">PI</div><div>${s.pi||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--gray400)">Score</div><div><b>${s.rs}/4</b></div></div>
+      </div>
+      <div style="font-size:10px;color:var(--gray400);margin-bottom:3px">Title</div><div style="font-size:12px">${s.r_title||'Not provided'}</div>
+      ${dlinks(rd,'research')}</div>
+    <div class="ms"><h3>Conference (${s.cs}/4 pts)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--gray400)">Highest Level</div><div>${s.conf_lvl||'None'}</div></div>
+        <div><div style="font-size:10px;color:var(--gray400)"># Participated</div><div>${s.conf_n||'—'}</div></div>
+      </div>${dlinks(cd,'conference')}</div>
+    <div class="ms"><h3>Community Service (${s.cms}/4 pts)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--gray400)">Highest Role</div><div>${s.comm_lvl||'None'}</div></div>
+        <div><div style="font-size:10px;color:var(--gray400)"># Activities</div><div>${s.comm_n||'—'}</div></div>
+      </div>${dlinks(cmd,'community service')}</div>`;
+  document.getElementById('c44Modal').classList.add('open');
+}
+async function saveC44Modal(sid){
+  const btn=document.querySelector('.save-btn');
+  const gv=parseFloat(document.getElementById('m-gpa').value),ev=parseFloat(document.getElementById('m-exp').value);
+  if(isNaN(gv)||gv<0||gv>44){toast('⚠ GPA must be 0–44',true);return;}
+  if(isNaN(ev)||ev<0||ev>44){toast('⚠ Experiential must be 0–44',true);return;}
+  if(!C44[sid])C44[sid]={};C44[sid].gpa_pts=gv;C44[sid].exp_pts=ev;lsSet('c44_state',C44);
+  btn.textContent='✓ Saved!';btn.classList.add('saved');setTimeout(()=>{btn.textContent='💾 Save & Recalculate';btn.classList.remove('saved');},2500);
+  renderC44Summary();renderC44Table();openC44Modal(sid);
+  toast(`✓ Score saved for ${BASE.find(s=>s.id===sid)?.name}`);
+  addAudit('Score Entry',CU?.username,`GPA+Exp ${sid}`,`${gv}/${ev}`);
+  if(db)try{await db.ref(`care44/ay2027/${sid}`).update({gpa_pts:gv,exp_pts:ev});}catch(e){}
+}
+function exportC44CSV(){
+  const cols=['Name','Student #','MRN','Email','Research','Research/4','Community/4','Conference/4','Extra/12','GPA/44','Exp/44','Total/100','Multi'];
+  const rows=BASE.map(s=>{
+    const g=C44[s.id]?.gpa_pts??'',e=C44[s.id]?.exp_pts??'',t=c44Total(s);
+    return[s.name,s.num,s.mrn,s.email,s.r_status,s.rs,s.cms,s.cs,c44Extra(s),g,e,t!=null?t.toFixed(1):'',s.dup?'Yes':'No'].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  dlCSV([cols.join(','),...rows].join('\n'),'CARE44_Scores_AY2027.csv');
+}
+/* ════ ③ ALLOCATION ENGINE ════ */
+let ALLOC = lsGet('plt_alloc') || {};
+let UNDO = [];
+let BLOCKS = lsGet('plt_blocks') || [
+  {id:'b1',rn:1,q:'Q1',st:'2026-07-01',en:'2026-07-28',sp:'ICU',total:4,filled:0},
+  {id:'b2',rn:1,q:'Q1',st:'2026-07-01',en:'2026-07-28',sp:'Cardiology',total:3,filled:0},
+  {id:'b3',rn:1,q:'Q1',st:'2026-07-01',en:'2026-07-28',sp:'Internal Medicine',total:6,filled:0},
+  {id:'b4',rn:2,q:'Q2',st:'2026-10-01',en:'2026-10-28',sp:'ICU',total:4,filled:0},
+  {id:'b5',rn:2,q:'Q2',st:'2026-10-01',en:'2026-10-28',sp:'Emergency',total:3,filled:0},
+  {id:'b6',rn:2,q:'Q2',st:'2026-10-01',en:'2026-10-28',sp:'Oncology',total:3,filled:0},
+  {id:'b7',rn:3,q:'Q3',st:'2027-01-01',en:'2027-01-28',sp:'Nephrology',total:3,filled:0},
+  {id:'b8',rn:3,q:'Q3',st:'2027-01-01',en:'2027-01-28',sp:'Psychiatry',total:4,filled:0},
+  {id:'b9',rn:4,q:'Q4',st:'2027-04-01',en:'2027-04-28',sp:'Pediatrics',total:4,filled:0},
+  {id:'b10',rn:4,q:'Q4',st:'2027-04-01',en:'2027-04-28',sp:'Surgery',total:3,filled:0}
+];
+let PRECS = lsGet('plt_precs') || [
+  {id:'p1',name:'Dr. Abdullah Al-Shehri',site:'KAMC Riyadh',sp:'ICU',q:'Q1',rn:1,total:2,asgn:0},
+  {id:'p2',name:'Dr. Lama Alfehaid',site:'KAMC Riyadh',sp:'Cardiology',q:'Q1',rn:1,total:2,asgn:0},
+  {id:'p3',name:'Dr. Maha Aldoughaim',site:'NGHA',sp:'Internal Medicine',q:'Q1',rn:1,total:3,asgn:0},
+  {id:'p4',name:'Dr. Nada Alsuhebany',site:'KAMC Riyadh',sp:'ICU',q:'Q2',rn:2,total:2,asgn:0},
+  {id:'p5',name:'Dr. Mohammad Shawaqfeh',site:'NGHA',sp:'Emergency',q:'Q2',rn:2,total:2,asgn:0},
+  {id:'p6',name:'Dr. Wesam Abdel Razaq',site:'KAMC Riyadh',sp:'Oncology',q:'Q2',rn:2,total:2,asgn:0},
+  {id:'p7',name:'Dr. Khalid Bin Saleh',site:'KAMC Riyadh',sp:'Nephrology',q:'Q3',rn:3,total:2,asgn:0},
+  {id:'p8',name:'Dr. Reem Alkhodier',site:'NGHA',sp:'Psychiatry',q:'Q3',rn:3,total:2,asgn:0},
+  {id:'p9',name:'Dr. Mohammed Alzahrani',site:'KAMC Riyadh',sp:'Pediatrics',q:'Q4',rn:4,total:2,asgn:0},
+  {id:'p10',name:'Dr. Faisal Al Mutairi',site:'KAMC Jeddah',sp:'Surgery',q:'Q4',rn:4,total:2,asgn:0}
+];
+
+function priorityList(){
+  return[...BASE].sort((a,b)=>{
+    const ta=c44Total(a)??0,tb=c44Total(b)??0;
+    if(tb!==ta)return tb-ta;
+    return c44Extra(b)-c44Extra(a);
+  });
+}
+
+function generateAllocation(){
+  if(CU?.role!=='Admin'){toast('Admin access required',true);return;}
+  UNDO.push(JSON.stringify(ALLOC));
+  const bSlots={},pSlots={};
+  BLOCKS.forEach(b=>{bSlots[b.id]=b.total;b.filled=0;});
+  PRECS.forEach(p=>{pSlots[p.id]=p.total;p.asgn=0;});
+  const quarters=['Q1','Q2','Q3','Q4'];
+  const specs=[...new Set(BLOCKS.map(b=>b.sp))];
+  let placed=0;
+  priorityList().forEach((s,i)=>{
+    let done=false;
+    for(const q of quarters){
+      if(done)break;
+      for(const sp of specs){
+        if(done)break;
+        const blk=BLOCKS.find(b=>b.q===q&&b.sp===sp&&bSlots[b.id]>0);if(!blk)continue;
+        const prec=PRECS.find(p=>p.q===q&&p.sp===sp&&pSlots[p.id]>0);if(!prec)continue;
+        ALLOC[s.id]={sid:s.id,name:s.name,num:s.num,rank:i+1,score:c44Total(s)??c44Extra(s),q,rn:blk.rn,st:blk.st,en:blk.en,sp,prec:prec.name,site:prec.site,bid:blk.id,pid:prec.id,pref:'Auto',status:'Suggested',notes:'',forced:false,by:'',at:''};
+        bSlots[blk.id]--;blk.filled++;pSlots[prec.id]--;prec.asgn++;done=true;placed++;
+      }
+    }
+    if(!done) ALLOC[s.id]={sid:s.id,name:s.name,num:s.num,rank:i+1,score:c44Total(s)??c44Extra(s),q:'—',rn:'—',st:'—',en:'—',sp:'Unassigned',prec:'—',site:'—',bid:null,pid:null,pref:'—',status:'Unassigned',notes:'No slot available',forced:false,by:'',at:''};
+  });
+  lsSet('plt_alloc',ALLOC);lsSet('plt_blocks',BLOCKS);lsSet('plt_precs',PRECS);
+  addAudit('Generate Allocation',CU?.username,`${placed}/${BASE.length} placed`,'');
+  toast(`✓ Allocation generated — ${placed}/${BASE.length} placed`);
+  renderAlloc();renderBlocksTable();renderPrecsTable();renderDash();showPage('allocation');
+}
+
+function renderAlloc(){
+  const body=document.getElementById('allocBody'),empty=document.getElementById('allocEmpty');if(!body)return;
+  const keys=Object.keys(ALLOC);
+  if(!keys.length){body.innerHTML='';empty.style.display='block';renderAllocStats();return;}
+  empty.style.display='none';
+  // populate specialty filter
+  const specSel=document.getElementById('aSpec');
+  const specs=[...new Set(Object.values(ALLOC).map(a=>a.sp))];
+  if(specSel&&specSel.options.length<=1)specs.forEach(sp=>{const o=document.createElement('option');o.value=sp;o.textContent=sp;specSel.appendChild(o);});
+  const q=(document.getElementById('aSearch')?.value||'').toLowerCase();
+  const fQ=document.getElementById('aQ')?.value||'';
+  const fSp=document.getElementById('aSpec')?.value||'';
+  const fSt=document.getElementById('aSt')?.value||'';
+  const rows=Object.values(ALLOC).filter(a=>{
+    const txt=(a.name+a.sp+a.site+a.prec).toLowerCase();
+    if(q&&!txt.includes(q))return false;
+    if(fQ&&a.q!==fQ)return false;
+    if(fSp&&a.sp!==fSp)return false;
+    if(fSt&&a.status!==fSt)return false;
+    return true;
+  }).sort((a,b)=>a.rank-b.rank);
+  body.innerHTML=rows.map(a=>{
+    const sc=a.status==='Approved'?'p-appr':a.status==='Modified'?'p-mod':a.status==='Unassigned'?'p-un':'p-sugg';
+    const ri=a.rank<=3?['🥇','🥈','🥉'][a.rank-1]:a.rank;
+    return`<tr>
+      <td><span style="font-weight:800">${ri}</span></td>
+      <td><div style="font-weight:600;font-size:12px">${a.name}</div><div style="font-size:10px;color:var(--gray400)">${a.num}</div></td>
+      <td>${a.q}</td><td>${a.rn}</td>
+      <td style="font-size:10px">${a.st!=='—'?a.st+'<br>'+a.en:a.st}</td>
+      <td><b>${a.sp}</b></td>
+      <td style="font-size:11px">${a.prec}</td>
+      <td style="font-size:11px">${a.site}</td>
+      <td><span class="pill ${a.pref==='Auto'?'p-sugg':'p-appr'}">${a.pref}</span></td>
+      <td><span class="pill ${sc}">${a.status}</span></td>
+      <td>${CU?.role==='Admin'?`<div style="display:flex;gap:3px">
+        ${a.status!=='Approved'?`<button class="btn btn-g btn-sm" onclick="approveOne('${a.sid}')">✓</button>`:'<span style="font-size:10px;color:var(--green)">✓</span>'}
+        <button class="btn btn-a btn-sm" onclick="openModModal('${a.sid}')">✎</button>
+        <button class="btn btn-o btn-sm" onclick="resetOne('${a.sid}')">↩</button>
+      </div>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  renderAllocStats();
+}
+function renderAllocStats(){
+  const vals=Object.values(ALLOC);
+  const tot=vals.length,appr=vals.filter(a=>a.status==='Approved').length;
+  const un=vals.filter(a=>a.status==='Unassigned').length,mod=vals.filter(a=>a.status==='Modified').length;
+  const el=document.getElementById('allocStats');if(!el)return;
+  el.innerHTML=`<div class="sc"><div class="v">${BASE.length}</div><div class="l">Students</div></div>
+    <div class="sc ok"><div class="v">${appr}</div><div class="l">Approved</div></div>
+    <div class="sc amber"><div class="v">${vals.filter(a=>a.status==='Suggested').length}</div><div class="l">Suggested</div></div>
+    <div class="sc"><div class="v">${mod}</div><div class="l">Modified</div></div>
+    <div class="sc warn"><div class="v">${un}</div><div class="l">Unassigned</div></div>
+    <div class="sc ok"><div class="v">${BASE.length?Math.round(appr/BASE.length*100):0}%</div><div class="l">Approval Rate</div></div>`;
+}
+function approveOne(sid){if(!ALLOC[sid])return;UNDO.push(JSON.stringify(ALLOC));const old=ALLOC[sid].status;ALLOC[sid].status='Approved';ALLOC[sid].by=CU?.username;ALLOC[sid].at=new Date().toLocaleString();lsSet('plt_alloc',ALLOC);addAudit('Approve',CU?.username,ALLOC[sid].name,old+'→Approved');toast(`✓ ${ALLOC[sid].name} approved`);renderAlloc();}
+function approveAll(){if(!confirm('Approve all suggested?'))return;UNDO.push(JSON.stringify(ALLOC));let n=0;Object.values(ALLOC).forEach(a=>{if(a.status==='Suggested'){a.status='Approved';a.by=CU?.username;a.at=new Date().toLocaleString();n++;}});lsSet('plt_alloc',ALLOC);addAudit('Approve All',CU?.username,`${n} approved`,'');toast(`✓ ${n} allocations approved`);renderAlloc();}
+function resetOne(sid){if(!ALLOC[sid])return;UNDO.push(JSON.stringify(ALLOC));ALLOC[sid].status='Suggested';ALLOC[sid].by='';ALLOC[sid].at='';lsSet('plt_alloc',ALLOC);toast('↩ Reset to Suggested');renderAlloc();}
+function undoLast(){if(!UNDO.length){toast('Nothing to undo',true);return;}ALLOC=JSON.parse(UNDO.pop());lsSet('plt_alloc',ALLOC);toast('↩ Undo done');renderAlloc();}
+
+let modSid=null;
+function openModModal(sid){if(!ALLOC[sid])return;modSid=sid;const a=ALLOC[sid];
+  document.getElementById('modName').textContent=a.name+' (Rank #'+a.rank+')';
+  document.getElementById('modSp').value=a.sp;document.getElementById('modPr').value=a.prec;
+  document.getElementById('modSi').value=a.site;document.getElementById('modQ').value=a.q;
+  document.getElementById('modNo').value=a.notes||'';
+  document.getElementById('modWarn').style.display='none';
+  document.getElementById('modModal').classList.add('open');
+}
+function saveMod(){
+  if(!modSid)return;
+  const sp=document.getElementById('modSp').value,pr=document.getElementById('modPr').value;
+  const si=document.getElementById('modSi').value,q=document.getElementById('modQ').value;
+  const no=document.getElementById('modNo').value;
+  // Check overbooking
+  const blk=BLOCKS.find(b=>b.sp===sp&&b.q===q);
+  const used=blk?Object.values(ALLOC).filter(a=>a.bid===blk.id&&a.sid!==modSid).length:0;
+  if(blk&&used>=blk.total){
+    document.getElementById('modWarn').style.display='block';
+    document.getElementById('modWarn').textContent=`⚠ No available slots for ${sp} in ${q}. Proceeding will overbook.`;
+    if(!confirm('Overbooking warning. Continue anyway?'))return;
+  }
+  UNDO.push(JSON.stringify(ALLOC));
+  ALLOC[modSid]={...ALLOC[modSid],sp,prec:pr,site:si,q,notes:no,status:'Modified',forced:blk&&used>=blk.total,by:CU?.username,at:new Date().toLocaleString()};
+  lsSet('plt_alloc',ALLOC);addAudit('Modify',CU?.username,ALLOC[modSid].name,`→${sp}/${q}`);
+  toast('✓ Modified');document.getElementById('modModal').classList.remove('open');renderAlloc();
+}
+function exportAllocCSV(){
+  const cols=['Rank','Name','Student #','Quarter','Rot #','Start','End','Specialty','Preceptor','Site','Pref','Status','Score','Notes'];
+  const rows=Object.values(ALLOC).sort((a,b)=>a.rank-b.rank).map(a=>[a.rank,a.name,a.num,a.q,a.rn,a.st,a.en,a.sp,a.prec,a.site,a.pref,a.status,a.score||'',a.notes||''].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  dlCSV([cols.join(','),...rows].join('\n'),'APPE_Allocation_AY2027.csv');
+}
+
+/* ════ ④ PRECEPTORS ════ */
+function renderPrecsTable(){
+  const body=document.getElementById('precBody');if(!body)return;
+  PRECS.forEach(p=>{p.asgn=Object.values(ALLOC).filter(a=>a.pid===p.id).length;});
+  body.innerHTML=PRECS.map(p=>{
+    const rem=p.total-p.asgn,pct=Math.round(p.asgn/p.total*100)||0;
+    return`<tr><td><b>${p.name}</b></td><td>${p.site}</td><td>${p.sp}</td><td>${p.q}</td><td>${p.total}</td><td><b style="color:var(--blue)">${p.asgn}</b></td><td><b style="color:${rem>0?'var(--green)':'var(--red)'}">${rem}</b></td>
+      <td><div class="pb"><div class="pf" style="width:${pct}%;background:${pct>=100?'var(--red)':pct>=70?'var(--amber)':'var(--green)'}"></div></div><span style="font-size:10px">${pct}%</span></td>
+      <td>${CU?.role==='Admin'?`<button class="btn btn-o btn-sm" onclick="delPrec('${p.id}')">✕</button>`:''}</td></tr>`;
+  }).join('');
+  renderPrecStats();renderHeatmaps();
+}
+function renderPrecStats(){
+  const el=document.getElementById('precStats');if(!el)return;
+  const tot=PRECS.length,totSl=PRECS.reduce((a,p)=>a+p.total,0),asgn=PRECS.reduce((a,p)=>a+p.asgn,0);
+  el.innerHTML=`<div class="sc"><div class="v">${tot}</div><div class="l">Preceptors</div></div>
+    <div class="sc"><div class="v">${totSl}</div><div class="l">Total Slots</div></div>
+    <div class="sc ok"><div class="v">${asgn}</div><div class="l">Assigned</div></div>
+    <div class="sc amber"><div class="v">${totSl-asgn}</div><div class="l">Remaining</div></div>
+    <div class="sc"><div class="v">${totSl?Math.round(asgn/totSl*100):0}%</div><div class="l">Utilization</div></div>`;
+}
+function renderHeatmaps(){
+  const sites=[...new Set(PRECS.map(p=>p.site))];
+  const specs=[...new Set(PRECS.map(p=>p.sp))];
+  const sEl=document.getElementById('siteHM'),spEl=document.getElementById('specHM');
+  if(sEl)sEl.innerHTML=sites.map(site=>{const ps=PRECS.filter(p=>p.site===site);const t=ps.reduce((a,p)=>a+p.total,0),a=ps.reduce((a,p)=>a+p.asgn,0);const pct=t?Math.round(a/t*100):0;const cl=pct>=100?'hc2':pct>=70?'hc1':'hc0';return`<div class="hc ${cl}"><span class="hv">${pct}%</span>${site.substring(0,14)}<br><small>${a}/${t}</small></div>`;}).join('');
+  if(spEl)spEl.innerHTML=specs.map(sp=>{const ps=PRECS.filter(p=>p.sp===sp);const t=ps.reduce((a,p)=>a+p.total,0),a=ps.reduce((a,p)=>a+p.asgn,0);const pct=t?Math.round(a/t*100):0;const cl=pct>=100?'hc2':pct>=70?'hc1':'hc0';return`<div class="hc ${cl}"><span class="hv">${pct}%</span>${sp}<br><small>${a}/${t}</small></div>`;}).join('');
+}
+let editPid=null;
+function openPrecModal(id){editPid=id||null;const p=id?PRECS.find(x=>x.id===id):null;
+  document.getElementById('precMTitle').textContent=p?'Edit Preceptor':'Add Preceptor';
+  document.getElementById('pN').value=p?.name||'';document.getElementById('pSi').value=p?.site||'';
+  document.getElementById('pSp').value=p?.sp||'';document.getElementById('pQ').value=p?.q||'Q1';
+  document.getElementById('pR').value=p?.rn||'';document.getElementById('pS').value=p?.total||'';
+  document.getElementById('pNo').value=p?.notes||'';document.getElementById('precModal').classList.add('open');
+}
+function savePrec(){
+  const name=document.getElementById('pN').value.trim(),site=document.getElementById('pSi').value.trim();
+  const sp=document.getElementById('pSp').value.trim(),q=document.getElementById('pQ').value;
+  const rn=parseInt(document.getElementById('pR').value)||1,total=parseInt(document.getElementById('pS').value)||1;
+  const notes=document.getElementById('pNo').value.trim();
+  if(!name||!site||!sp){toast('Name, Site, Specialty required',true);return;}
+  if(editPid){const p=PRECS.find(x=>x.id===editPid);if(p)Object.assign(p,{name,site,sp,q,rn,total,notes});}
+  else PRECS.push({id:'p'+Date.now(),name,site,sp,q,rn,total,asgn:0,notes});
+  lsSet('plt_precs',PRECS);addAudit('Save Preceptor',CU?.username,name,'');
+  toast('✓ Preceptor saved');document.getElementById('precModal').classList.remove('open');renderPrecsTable();
+}
+function delPrec(id){if(!confirm('Remove preceptor?'))return;const i=PRECS.findIndex(p=>p.id===id);if(i<0)return;addAudit('Delete Preceptor',CU?.username,PRECS[i].name,'');PRECS.splice(i,1);lsSet('plt_precs',PRECS);renderPrecsTable();}
+
+/* ════ ⑤ BLOCKS ════ */
+function renderBlocksTable(){
+  const body=document.getElementById('blocksBody');if(!body)return;
+  BLOCKS.forEach(b=>{b.filled=Object.values(ALLOC).filter(a=>a.bid===b.id).length;});
+  body.innerHTML=BLOCKS.map(b=>{
+    const av=b.total-b.filled,pct=Math.round(b.filled/b.total*100)||0;
+    const st=av===0?'<span class="pill p-un">Full</span>':av<=b.total*0.3?'<span class="pill p-mod">Near Full</span>':'<span class="pill p-appr">Available</span>';
+    return`<tr><td><b>${b.rn}</b></td><td>${b.q}</td><td>${b.st}</td><td>${b.en}</td><td><b>${b.sp}</b></td><td>${b.total}</td><td><b style="color:var(--blue)">${b.filled}</b></td><td><b style="color:${av>0?'var(--green)':'var(--red)'}">${av}</b></td><td>${st}</td><td>${CU?.role==='Admin'?`<button class="btn btn-o btn-sm" onclick="delBlock('${b.id}')">✕</button>`:''}</td></tr>`;
+  }).join('');
+  renderBlockStats();
+}
+function renderBlockStats(){
+  const el=document.getElementById('blockStats');if(!el)return;
+  const tot=BLOCKS.reduce((a,b)=>a+b.total,0),filled=BLOCKS.reduce((a,b)=>a+b.filled,0);
+  el.innerHTML=`<div class="sc"><div class="v">${BLOCKS.length}</div><div class="l">Blocks</div></div>
+    <div class="sc"><div class="v">${tot}</div><div class="l">Total Slots</div></div>
+    <div class="sc ok"><div class="v">${filled}</div><div class="l">Filled</div></div>
+    <div class="sc amber"><div class="v">${tot-filled}</div><div class="l">Remaining</div></div>
+    <div class="sc"><div class="v">${tot?Math.round(filled/tot*100):0}%</div><div class="l">Utilization</div></div>`;
+}
+let editBid=null;
+function openBlockModal(id){editBid=id||null;const b=id?BLOCKS.find(x=>x.id===id):null;
+  document.getElementById('blkMTitle').textContent=b?'Edit Block':'Add Block';
+  document.getElementById('bR').value=b?.rn||'';document.getElementById('bQ').value=b?.q||'Q1';
+  document.getElementById('bSt').value=b?.st||'';document.getElementById('bEn').value=b?.en||'';
+  document.getElementById('bSp').value=b?.sp||'';document.getElementById('bSl').value=b?.total||'';
+  document.getElementById('blockModal').classList.add('open');
+}
+function saveBlock(){
+  const rn=parseInt(document.getElementById('bR').value)||1,q=document.getElementById('bQ').value;
+  const st=document.getElementById('bSt').value,en=document.getElementById('bEn').value;
+  const sp=document.getElementById('bSp').value.trim(),total=parseInt(document.getElementById('bSl').value)||1;
+  if(!sp||!st||!en){toast('Specialty, Start, End required',true);return;}
+  if(editBid){const b=BLOCKS.find(x=>x.id===editBid);if(b)Object.assign(b,{rn,q,st,en,sp,total});}
+  else BLOCKS.push({id:'b'+Date.now(),rn,q,st,en,sp,total,filled:0});
+  lsSet('plt_blocks',BLOCKS);addAudit('Save Block',CU?.username,sp+' '+q,'');
+  toast('✓ Block saved');document.getElementById('blockModal').classList.remove('open');renderBlocksTable();
+}
+function delBlock(id){if(!confirm('Remove block?'))return;const i=BLOCKS.findIndex(b=>b.id===id);if(i<0)return;BLOCKS.splice(i,1);lsSet('plt_blocks',BLOCKS);renderBlocksTable();}
+
+/* ════ ⑥ ANALYTICS ════ */
+let CHS={};
+function refreshCharts(){
+  const alloc=Object.values(ALLOC);
+  const spD={};alloc.forEach(a=>{spD[a.sp]=(spD[a.sp]||0)+1;});
+  const appr=alloc.filter(a=>a.status==='Approved').length,sugg=alloc.filter(a=>a.status==='Suggested').length;
+  const mod=alloc.filter(a=>a.status==='Modified').length,un=alloc.filter(a=>a.status==='Unassigned').length;
+  const sites={};PRECS.forEach(p=>{if(!sites[p.site])sites[p.site]={t:0,a:0};sites[p.site].t+=p.total;sites[p.site].a+=p.asgn;});
+  const extras=BASE.map(s=>c44Extra(s));
+  const eb={'12':extras.filter(x=>x===12).length,'9-11':extras.filter(x=>x>=9&&x<12).length,'6-8':extras.filter(x=>x>=6&&x<9).length,'<6':extras.filter(x=>x<6).length};
+  const qs={'Q1':0,'Q2':0,'Q3':0,'Q4':0};alloc.forEach(a=>{if(qs[a.q]!==undefined)qs[a.q]++;});
+  function mkC(id,type,labels,data,bg,label){if(CHS[id]){CHS[id].destroy();delete CHS[id];}const ctx=document.getElementById(id);if(!ctx)return;CHS[id]=new Chart(ctx,{type,data:{labels,datasets:[{label:label||'',data,backgroundColor:bg||'#2563eb',borderRadius:4}]},options:{plugins:{legend:{display:type==='pie'||type==='doughnut'}},responsive:true,maintainAspectRatio:true}});}
+  mkC('ch1','bar',Object.keys(spD),Object.values(spD),'#2563eb','Students');
+  mkC('ch2','doughnut',['Approved','Suggested','Modified','Unassigned'],[appr,sugg,mod,un],['#059669','#94a3b8','#d97706','#dc2626']);
+  mkC('ch3','bar',Object.keys(sites),Object.values(sites).map(s=>Math.round(s.a/s.t*100)),'#059669','Utilization %');
+  mkC('ch4','bar',Object.keys(eb),Object.values(eb),'#7c3aed','Students');
+  mkC('ch5','bar',Object.keys(qs),Object.values(qs),'#0e7490','Students');
+  mkC('ch6','doughnut',['Auto-Assigned','Unassigned'],[alloc.filter(a=>a.pref==='Auto').length,un],['#2563eb','#dc2626']);
+}
+
+/* ════ ⑦ REPORTS ════ */
+let RPT_Q='All';
+function setRptQ(q){
+  RPT_Q=q;
+  ['All','Q1','Q2','Q3','Q4'].forEach(x=>{const btn=document.getElementById('r'+x.replace(' ',''));if(btn){btn.className='btn btn-o';btn.style.background='';btn.style.color='';}});
+  const active=document.getElementById('r'+q.replace(' ',''));if(active){active.className='btn btn-p';}
+  document.getElementById('rptLabel').textContent=q==='All'?'All Quarters':q;
+  document.getElementById('rptDate').textContent=new Date().toLocaleDateString('en-SA');
+  const rows=Object.values(ALLOC).filter(a=>a.status==='Approved'&&(q==='All'||a.q===q)).sort((a,b)=>a.rank-b.rank);
+  const body=document.getElementById('rptBody');if(!body)return;
+  if(!rows.length){body.innerHTML='<div class="alert al-i">No approved allocations for this quarter. Generate and approve first.</div>';return;}
+  body.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:var(--navy);color:white"><tr><th style="padding:7px">Rank</th><th>Student</th><th>Specialty</th><th>Quarter</th><th>Dates</th><th>Preceptor</th><th>Site</th></tr></thead><tbody>${rows.map((a,i)=>`<tr style="background:${i%2?'#f8fafc':'white'};border-bottom:1px solid #e2e8f0"><td style="padding:7px">${a.rank}</td><td>${a.name}</td><td><b>${a.sp}</b></td><td>${a.q}</td><td style="font-size:10px">${a.st} – ${a.en}</td><td>${a.prec}</td><td>${a.site}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ════ ⑧ SETTINGS ════ */
+let AUDIT=lsGet('plt_audit')||[];
+function addAudit(action,user,target,value){AUDIT.unshift({ts:new Date().toLocaleString(),action,user:user||'—',target:target||'—',value:value||'—'});if(AUDIT.length>200)AUDIT=AUDIT.slice(0,200);lsSet('plt_audit',AUDIT);}
+function renderAudit(){const el=document.getElementById('auditBody');if(!el)return;if(!AUDIT.length){el.innerHTML='<div style="color:var(--gray400);font-size:12px;text-align:center;padding:20px">No events yet</div>';return;}el.innerHTML=AUDIT.slice(0,60).map(e=>`<div class="ae"><div class="at">${e.ts} · ${e.user}</div><div class="am">${e.action}${e.target&&e.target!=='—'?' — '+e.target:''}</div>${e.value&&e.value!=='—'?`<div class="ad">${e.value}</div>`:''}</div>`).join('');}
+function clearAudit(){if(!confirm('Clear audit log?'))return;AUDIT=[];lsSet('plt_audit',AUDIT);renderAudit();toast('Audit cleared');}
+
+function renderUsers(){const el=document.getElementById('usersBody');if(!el)return;el.innerHTML=USERS.map(u=>`<tr><td>${u.username}</td><td><span class="pill ${u.role==='Admin'?'p-appr':'p-sugg'}">${u.role}</span></td><td><button class="btn btn-o btn-sm" onclick="delUser('${u.username}')">✕</button></td></tr>`).join('');}
+function openUserModal(){document.getElementById('uN').value='';document.getElementById('uP').value='';document.getElementById('uR').value='Viewer';document.getElementById('userModal').classList.add('open');}
+function saveUser(){const n=document.getElementById('uN').value.trim(),p=document.getElementById('uP').value.trim(),r=document.getElementById('uR').value;if(!n||!p){toast('Username and password required',true);return;}if(USERS.find(u=>u.username===n)){toast('Username exists',true);return;}USERS.push({username:n,password:p,role:r});lsSet('plt_users',USERS);addAudit('Add User',CU?.username,n,r);toast('✓ User added');document.getElementById('userModal').classList.remove('open');renderUsers();}
+function delUser(u){if(u===CU?.username){toast('Cannot delete own account',true);return;}if(!confirm('Remove '+u+'?'))return;const i=USERS.findIndex(x=>x.username===u);if(i<0)return;USERS.splice(i,1);lsSet('plt_users',USERS);addAudit('Delete User',CU?.username,u,'');renderUsers();toast('User removed');}
+
+// ════ GOOGLE SHEETS LIVE SYNC ════
+// Fetches ALL sheets by gid — CARE-44 Scores, Rotation Blocks, Preceptor Availability, Users
+let GS_INT = null;
+let GS_SHEET_ID = null;  // extracted from URL
+let GS_APPS_URL = null;   // Apps Script web app URL (preferred)
+
+const GS_PROXIES = [
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+];
+
+// Sheet tab gids — default for a workbook uploaded to Google Sheets
+// User can override in Settings if their gids differ
+const GS_GIDS = {
+  care44:    '0',       // CARE-44 Scores (first sheet)
+  blocks:    '1',       // Rotation Blocks
+  preceptors:'2',       // Preceptor Availability
+  users:     '3',       // Users
+};
+
+function connectGS(){
+  const raw = document.getElementById('gsUrl').value.trim();
+  if(!raw){toast('Enter Apps Script URL or Sheet ID',true);return;}
+
+  // CASE 1: Google Apps Script Web App URL (most reliable — recommended)
+  if(raw.includes('script.google.com')){
+    GS_SHEET_ID = null;
+    GS_APPS_URL = raw.replace(/\/exec.*/, '/exec'); // strip params
+    lsSet('gs_apps_url', GS_APPS_URL);
+    lsSet('gs_sheet_id', null);
+    document.getElementById('gsUrl').value = GS_APPS_URL;
+    syncAllSheets();
+    if(GS_INT) clearInterval(GS_INT);
+    GS_INT = setInterval(syncAllSheets, 30000);
+    toast('✓ Connected via Apps Script — syncing…');
+    return;
+  }
+
+  // CASE 2: Sheet ID or full Google Sheets URL
+  const idMatch = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const bareId  = raw.match(/^[a-zA-Z0-9_-]{20,}$/);
+  if(idMatch){ GS_SHEET_ID = idMatch[1]; }
+  else if(bareId){ GS_SHEET_ID = raw; }
+  else { toast('Could not recognise URL — paste the Apps Script /exec URL',true); return; }
+  GS_APPS_URL = null;
+  lsSet('gs_sheet_id', GS_SHEET_ID);
+  lsSet('gs_apps_url', null);
+  document.getElementById('gsUrl').value = GS_SHEET_ID;
+  syncAllSheets();
+  if(GS_INT) clearInterval(GS_INT);
+  GS_INT = setInterval(syncAllSheets, 30000);
+}
+
+async function syncAllSheets(){
+  const appsUrl = GS_APPS_URL || lsGet('gs_apps_url');
+  const id = GS_SHEET_ID || lsGet('gs_sheet_id');
+  if(!appsUrl && !id) return;
+  const st = document.getElementById('gsSt');
+  if(st) st.innerHTML = '<span>🔄 Syncing all sheets…</span>';
+  const results = {};
+  let anyFail = false;
+
+  if(appsUrl){
+    // Use Apps Script proxy — fetch each sheet by name param
+    for(const sheet of Object.keys(GS_GIDS)){
+      const url = appsUrl + '?sheet=' + sheet;
+      const text = await fetchWithProxy(url);
+      if(text && text.length > 5){ results[sheet] = text; }
+      else { anyFail = true; }
+    }
+  } else {
+    // Fallback: direct export + proxy chain
+    for(const [sheet, gid] of Object.entries(GS_GIDS)){
+      const baseUrl = 'https://docs.google.com/spreadsheets/d/'+id+'/export?format=csv&gid='+gid;
+      const text = await fetchWithProxy(baseUrl);
+      if(text){ results[sheet] = text; }
+      else { anyFail = true; }
+    }
+  }
+  // Parse each sheet
+  let summary = [];
+  if(results.care44){
+    const n = parseScoresCSV(results.care44);
+    if(n > 0) summary.push(n + ' scores');
+  }
+  if(results.blocks){
+    const n = parseBlocksCSV(results.blocks);
+    if(n > 0) summary.push(n + ' blocks');
+  }
+  if(results.preceptors){
+    const n = parsePreceptorsCSV(results.preceptors);
+    if(n > 0) summary.push(n + ' preceptors');
+  }
+  if(results.users){
+    const n = parseUsersCSV(results.users);
+    if(n > 0) summary.push(n + ' users');
+  }
+  const msg = summary.length ? summary.join(', ') : 'no changes';
+  if(st) st.innerHTML = '<span style="color:var(--green)">🟢 Live · ' + new Date().toLocaleTimeString() + '</span>';
+  const el = document.getElementById('gsLast');
+  if(el) el.textContent = 'Last sync: ' + new Date().toLocaleString() + ' — synced: ' + msg;
+  addAudit('GS Sync', CU?.username, msg, new Date().toLocaleTimeString());
+  if(!anyFail) toast('✓ Synced: ' + msg);
+  // Refresh UI
+  renderC44Summary(); doFilter(); renderPrecsTable(); renderBlocksTable(); renderDash();
+}
+
+async function fetchWithProxy(url){
+  const allUrls = [url, ...GS_PROXIES.map(fn => fn(url))];
+  for(const tryUrl of allUrls){
+    try{
+      const res = await fetch(tryUrl, {signal: AbortSignal.timeout(8000)});
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(text && text.trim().length > 5) return text;
+    } catch(e){ continue; }
+  }
+  return null;
+}
+
+/* ── CARE-44 Scores parser ── */
+function parseScoresCSV(text){
+  if(!text || text.length < 10) return 0;
+  const lines = text.split('\n');
+  let n = 0;
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i].replace(/\r$/,'');
+    const cols = line.split(',');
+    if(cols.length < 7) continue;
+    const sid = cols[0].replace(/"/g,'').trim();
+    // Only process rows where col 0 is a short number (student ID)
+    const num = Number(sid);
+    if(!sid || isNaN(num) || num <= 0 || num > 99999) continue;
+    const student = BASE.find(s => s.id === sid || s.num === sid);
+    if(!student) continue;
+    const gpaRaw = cols[5].replace(/"/g,'').trim();
+    const expRaw = cols[6].replace(/"/g,'').trim();
+    const gpa = parseFloat(gpaRaw);
+    const exp = parseFloat(expRaw);
+    if(!C44[student.id]) C44[student.id] = {};
+    if(!isNaN(gpa) && gpa > 0 && gpa <= 44){ C44[student.id].gpa_pts = gpa; n++; }
+    if(!isNaN(exp) && exp > 0 && exp <= 44){ C44[student.id].exp_pts = exp; }
+  }
+  if(n > 0) lsSet('c44_state', C44);
+  return n;
+}
+
+/* ── Rotation Blocks parser ── */
+function parseBlocksCSV(text){
+  const rows = csvToRows(text); if(rows.length < 2) return 0;
+  // Find real header row
+  let headerIdx = 0;
+  for(let i = 0; i < Math.min(rows.length, 8); i++){
+    const j = rows[i].join(' ').toLowerCase();
+    if(j.includes('rotation number') || j.includes('specialty')){ headerIdx = i; break; }
+  }
+  const h = rows[headerIdx].map(x => x.toLowerCase().trim());
+  const rnCol  = h.findIndex(x => x.includes('rotation number') || x.includes('rotation #'));
+  const qCol   = h.findIndex(x => x === 'quarter' || x.includes('quarter'));
+  const stCol  = h.findIndex(x => x.includes('start'));
+  const enCol  = h.findIndex(x => x.includes('end'));
+  const spCol  = h.findIndex(x => x.includes('specialty'));
+  const slCol  = h.findIndex(x => x.includes('slot') || x.includes('available'));
+  if(spCol < 0) return 0;
+  const newBlocks = [];
+  for(let i = headerIdx + 1; i < rows.length; i++){
+    const cols = rows[i];
+    const sp = (cols[spCol] || '').trim(); if(!sp) continue;
+    newBlocks.push({
+      id: 'gs_b' + i,
+      rn:    rnCol >= 0 ? (parseInt(cols[rnCol]) || i) : i,
+      q:     qCol  >= 0 ? (cols[qCol] || 'Q1').trim() : 'Q1',
+      st:    stCol >= 0 ? (cols[stCol] || '').trim() : '',
+      en:    enCol >= 0 ? (cols[enCol] || '').trim() : '',
+      sp:    sp,
+      total: slCol >= 0 ? (parseInt(cols[slCol]) || 1) : 1,
+      filled: 0,
+    });
+  }
+  if(newBlocks.length){
+    BLOCKS = newBlocks;
+    lsSet('plt_blocks', BLOCKS);
+    return newBlocks.length;
+  }
+  return 0;
+}
+
+/* ── Preceptors parser ── */
+function parsePreceptorsCSV(text){
+  const rows = csvToRows(text); if(rows.length < 2) return 0;
+  // Find real header row
+  let headerIdx = 0;
+  for(let i = 0; i < Math.min(rows.length, 8); i++){
+    const j = rows[i].join(' ').toLowerCase();
+    if(j.includes('preceptor name') || j.includes('specialty')){ headerIdx = i; break; }
+  }
+  const h = rows[headerIdx].map(x => x.toLowerCase().trim());
+  const nmCol  = h.findIndex(x => x.includes('preceptor name') || x.includes('name'));
+  const siCol  = h.findIndex(x => x === 'site' || x.includes('site'));
+  const spCol  = h.findIndex(x => x.includes('specialty'));
+  const qCol   = h.findIndex(x => x === 'quarter');
+  const rnCol  = h.findIndex(x => x.includes('rotation number') || x.includes('rotation #'));
+  const slCol  = h.findIndex(x => x.includes('slot') || x.includes('available'));
+  const noCol  = h.findIndex(x => x.includes('note'));
+  const idCol  = h.findIndex(x => x.includes('preceptor id') || x === 'id');
+  if(nmCol < 0) return 0;
+  const newPrecs = [];
+  for(let i = headerIdx + 1; i < rows.length; i++){
+    const cols = rows[i];
+    const name = (cols[nmCol] || '').trim(); if(!name) continue;
+    newPrecs.push({
+      id:    idCol >= 0 ? (cols[idCol] || 'gs_p'+i).trim() : 'gs_p'+i,
+      name:  name,
+      site:  siCol >= 0 ? (cols[siCol] || '').trim() : '',
+      sp:    spCol >= 0 ? (cols[spCol] || '').trim() : '',
+      q:     qCol  >= 0 ? (cols[qCol]  || 'Q1').trim() : 'Q1',
+      rn:    rnCol >= 0 ? (parseInt(cols[rnCol]) || 1) : 1,
+      total: slCol >= 0 ? (parseInt(cols[slCol]) || 1) : 1,
+      asgn:  0,
+      notes: noCol >= 0 ? (cols[noCol] || '').trim() : '',
+    });
+  }
+  if(newPrecs.length){
+    PRECS = newPrecs;
+    lsSet('plt_precs', PRECS);
+    return newPrecs.length;
+  }
+  return 0;
+}
+
+/* ── Users parser ── */
+function parseUsersCSV(text){
+  const rows = csvToRows(text); if(rows.length < 2) return 0;
+  // Find real header row
+  let headerIdx = 0;
+  for(let i = 0; i < Math.min(rows.length, 8); i++){
+    const j = rows[i].join(' ').toLowerCase();
+    if(j.includes('username') || j.includes('password')){ headerIdx = i; break; }
+  }
+  const h = rows[headerIdx].map(x => x.toLowerCase().trim());
+  const uCol = h.findIndex(x => x === 'username' || x.includes('user'));
+  const pCol = h.findIndex(x => x === 'password' || x.includes('pass'));
+  const rCol = h.findIndex(x => x === 'role');
+  if(uCol < 0 || pCol < 0) return 0;
+  let n = 0;
+  for(let i = headerIdx + 1; i < rows.length; i++){
+    const cols = rows[i];
+    const u = (cols[uCol] || '').trim(), p = (cols[pCol] || '').trim();
+    if(!u || !p) continue;
+    const r = rCol >= 0 ? (cols[rCol] || 'Viewer').trim() : 'Viewer';
+    if(!USERS.find(x => x.username === u)){
+      USERS.push({username: u, password: p, role: r});
+      n++;
+    }
+  }
+  if(n > 0) lsSet('plt_users', USERS);
+  return n;
+}
+
+/* ── CSV parser ── */
+function csvToRows(text){
+  const lines = text.split('\n').map(l => l.replace(/\r$/, '')).filter(l => l.trim());
+  return lines.map(parseCSVRow);
+}
+function parseCSVRow(line){
+  const result = []; let cur = ''; let inQ = false;
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if(ch === '"'){ inQ = !inQ; }
+    else if(ch === ',' && !inQ){ result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result.map(s => s.replace(/^"|"$/g, ''));
+}
+
+function showGsHelp(){
+  const helpId = 'gsHelpMsg';
+  if(document.getElementById(helpId)) return;
+  const helpDiv = document.createElement('div');
+  helpDiv.id = helpId;
+  helpDiv.className = 'alert al-w';
+  helpDiv.style.marginTop = '10px';
+  helpDiv.innerHTML = '<b>How to connect:</b><br><br>'
+    + '1. Open your Google Sheet<br>'
+    + '2. Copy the Sheet ID from the URL — the long string between <code>/d/</code> and <code>/edit</code><br>'
+    + '3. Paste just the ID (or the full URL) into the field above<br><br>'
+    + '<b>Sheet tab order must be:</b><br>'
+    + '① CARE-44 Scores &nbsp; ② Rotation Blocks &nbsp; ③ Preceptor Availability &nbsp; ④ Users<br><br>'
+    + '<b>Alternative:</b> Use Excel Upload (Settings → Excel Workbook Upload) — no URL needed.';
+  const gsPanel = document.querySelector('.gsp');
+  if(gsPanel) gsPanel.appendChild(helpDiv);
+}
+
+function manualGS(){
+  const id = GS_SHEET_ID || lsGet('gs_sheet_id');
+  if(!id){toast('No sheet connected',true);return;}
+  GS_SHEET_ID = id;
+  syncAllSheets();
+}
+function disconnectGS(){
+  if(GS_INT) clearInterval(GS_INT); GS_INT = null;
+  GS_SHEET_ID = null; GS_APPS_URL = null;
+  lsSet('gs_sheet_id', null); lsSet('gs_apps_url', null);
+  const st = document.getElementById('gsSt'); if(st) st.textContent = '⚪ Disconnected';
+  const help = document.getElementById('gsHelpMsg'); if(help) help.remove();
+  document.getElementById('gsUrl').value = '';
+  toast('Disconnected');
+}
+
+// Restore GS connection on init
+function restoreGS(){
+  const appsUrl = lsGet('gs_apps_url');
+  const id = lsGet('gs_sheet_id');
+  if(appsUrl){
+    GS_APPS_URL = appsUrl;
+    document.getElementById('gsUrl').value = appsUrl;
+    if(GS_INT) clearInterval(GS_INT);
+    GS_INT = setInterval(syncAllSheets, 30000);
+    syncAllSheets();
+  } else if(id){
+    GS_SHEET_ID = id;
+    document.getElementById('gsUrl').value = id;
+    if(GS_INT) clearInterval(GS_INT);
+    GS_INT = setInterval(syncAllSheets, 30000);
+    syncAllSheets();
+  }
+}
+
+
+// Excel
+function handleXL(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      let msg='';
+      if(wb.SheetNames.includes('Rotation Blocks')){const d=XLSX.utils.sheet_to_json(wb.Sheets['Rotation Blocks']);if(d.length){BLOCKS=d.map((r,i)=>({id:'b'+(Date.now()+i),rn:r['Rotation Number']||i+1,q:r['Quarter']||'Q1',st:r['Start Date']||'',en:r['End Date']||'',sp:r['Specialty']||'Unknown',total:parseInt(r['Available Slots'])||2,filled:0}));lsSet('plt_blocks',BLOCKS);msg+=`✓ ${BLOCKS.length} blocks loaded. `;}}
+      if(wb.SheetNames.includes('Preceptor Availability')){const d=XLSX.utils.sheet_to_json(wb.Sheets['Preceptor Availability']);if(d.length){PRECS=d.map((r,i)=>({id:'p'+(Date.now()+i),name:r['Preceptor Name']||'Unknown',site:r['Site']||'',sp:r['Specialty']||'',q:r['Quarter']||'Q1',rn:parseInt(r['Rotation Number'])||1,total:parseInt(r['Available Slots'])||1,asgn:0,notes:r['Notes']||''}));lsSet('plt_precs',PRECS);msg+=`✓ ${PRECS.length} preceptors loaded. `;}}
+      if(wb.SheetNames.includes('Users')){const d=XLSX.utils.sheet_to_json(wb.Sheets['Users']);if(d.length){const nu=d.filter(r=>r['Username']&&r['Password']).map(r=>({username:r['Username'],password:r['Password'],role:r['Role']||'Viewer'}));if(nu.length){USERS=[...USERS,...nu.filter(x=>!USERS.find(u=>u.username===x.username))];lsSet('plt_users',USERS);msg+=`✓ ${nu.length} users loaded.`;}}}
+      addAudit('Excel Upload',CU?.username,file.name,wb.SheetNames.join(', '));
+      const st=document.getElementById('xlStatus');if(st)st.innerHTML=`<div class="alert al-ok">${msg||'File loaded — no matching sheets found'}</div>`;
+      renderBlocksTable();renderPrecsTable();renderUsers();toast('✓ Excel loaded');
+    }catch(err){const st=document.getElementById('xlStatus');if(st)st.innerHTML=`<div class="alert al-d">Error: ${err.message}</div>`;toast('Excel error',true);}
+  };reader.readAsBinaryString(file);
+}
+
+function clearAlloc(){if(!confirm('Reset allocation?'))return;ALLOC={};lsSet('plt_alloc',ALLOC);renderAlloc();toast('Allocation reset');}
+function clearPrecs(){if(!confirm('Reset preceptors?'))return;PRECS=[];lsSet('plt_precs',PRECS);renderPrecsTable();toast('Preceptors reset');}
+function clearBlks(){if(!confirm('Reset blocks?'))return;BLOCKS=[];lsSet('plt_blocks',BLOCKS);renderBlocksTable();toast('Blocks reset');}
+function clearAll(){if(!confirm('⚠ Clear ALL data?'))return;['plt_alloc','plt_blocks','plt_precs','plt_audit','plt_users','c44_state','gs_url'].forEach(k=>localStorage.removeItem(k));location.reload();}
+
+/* ════ DASHBOARD ════ */
+function renderDash(){
+  const tot=BASE.length,done=BASE.filter(s=>C44[s.id]?.gpa_pts!=null&&C44[s.id]?.exp_pts!=null).length;
+  const alloc=Object.values(ALLOC),appr=alloc.filter(a=>a.status==='Approved').length,un=alloc.filter(a=>a.status==='Unassigned').length;
+  const totSl=BLOCKS.reduce((a,b)=>a+b.total,0),filled=BLOCKS.reduce((a,b)=>a+b.filled,0);
+  const el=document.getElementById('dashStats');if(!el)return;
+  el.innerHTML=`<div class="sc"><div class="v">${tot}</div><div class="l">Students</div></div>
+    <div class="sc ok"><div class="v">${[...new Set(BLOCKS.map(b=>b.sp))].length}</div><div class="l">Specialties</div></div>
+    <div class="sc"><div class="v">${BLOCKS.length}</div><div class="l">Blocks</div></div>
+    <div class="sc ok"><div class="v">${filled}</div><div class="l">Filled Slots</div></div>
+    <div class="sc amber"><div class="v">${totSl-filled}</div><div class="l">Remaining</div></div>
+    <div class="sc warn"><div class="v">${un}</div><div class="l">Unassigned</div></div>
+    <div class="sc"><div class="v">${PRECS.length}</div><div class="l">Preceptors</div></div>
+    <div class="sc ok"><div class="v">${totSl?Math.round(filled/totSl*100):0}%</div><div class="l">Utilization</div></div>`;
+  const sc=document.getElementById('dashScore');
+  if(sc)sc.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="font-size:12px;color:var(--gray600)">GPA + Exp entered</span><b>${done}/${tot}</b></div><div class="pb" style="height:10px;margin-bottom:12px"><div class="pf" style="width:${done/tot*100}%"></div></div><div style="font-size:11px;color:var(--gray400)">Remaining: ${tot-done} students</div>`;
+  const al=document.getElementById('dashAlloc');
+  if(al)al.innerHTML=alloc.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+    <div style="background:var(--green-light);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">${appr}</div><div style="font-size:10px;color:var(--gray600)">Approved</div></div>
+    <div style="background:var(--amber-light);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--amber)">${alloc.filter(a=>a.status==='Suggested').length}</div><div style="font-size:10px;color:var(--gray600)">Suggested</div></div>
+    <div style="background:var(--red-light);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--red)">${un}</div><div style="font-size:10px;color:var(--gray600)">Unassigned</div></div>
+    <div style="background:var(--gray100);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${alloc.filter(a=>a.status==='Modified').length}</div><div style="font-size:10px;color:var(--gray600)">Modified</div></div>
+  </div>`:'<div class="alert al-i">No allocation yet — click Generate Allocation.</div>';
+  const da=document.getElementById('dashAudit');
+  if(da)da.innerHTML=AUDIT.slice(0,5).map(e=>`<div class="ae"><div class="at">${e.ts} · ${e.user}</div><div class="am">${e.action}${e.target&&e.target!=='—'?' — '+e.target:''}</div></div>`).join('')||'<div style="color:var(--gray400);font-size:12px">No activity yet</div>';
+}
+
+/* ════ NAV & INIT ════ */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id),nv=document.getElementById('nav-'+id);
+  if(pg)pg.classList.add('active');if(nv)nv.classList.add('active');
+  if(id==='care44'){renderC44Summary();doFilter();}
+  if(id==='allocation')renderAlloc();
+  if(id==='preceptors')renderPrecsTable();
+  if(id==='blocks')renderBlocksTable();
+  if(id==='analytics')setTimeout(refreshCharts,100);
+  if(id==='reports')setRptQ(RPT_Q);
+  if(id==='settings'){renderAudit();renderUsers();const sid=lsGet('gs_sheet_id');if(sid)document.getElementById('gsUrl').value=sid;}
+  if(id==='dashboard')renderDash();
+}
+
+function initPlatform(){
+  C44=lsGet('c44_state')||{};
+  renderC44Summary();doFilter();renderDash();
+  restoreGS();
+  // Firebase sync
+  if(db){
+    let fbOk=false;
+    db.ref('care44/ay2027').on('value',snap=>{
+      const fbData=snap.val()||{};C44={...C44,...fbData};lsSet('c44_state',C44);
+      document.getElementById('syncDot').classList.add('live');document.getElementById('syncLabel').textContent='Live sync ✓';
+      fbOk=true;renderC44Summary();renderC44Table();
+    },()=>{document.getElementById('syncDot').style.background='#f87171';document.getElementById('syncLabel').textContent='⚠ Offline';});
+    setTimeout(()=>{if(!fbOk){document.getElementById('syncDot').style.background='#f87171';document.getElementById('syncLabel').textContent='⚠ Offline';}},6000);
+  } else {document.getElementById('syncDot').style.background='#f87171';document.getElementById('syncLabel').textContent='⚠ Offline';}
+}
+
+/* ════ UTILITIES ════ */
+function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isErr?' err':'');setTimeout(()=>t.classList.remove('show'),3200);}
+function dlCSV(csv,fn){const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=fn;a.click();}
+</script>
+</body>
+</html>
